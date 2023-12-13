@@ -1,0 +1,74 @@
+i =  3, N =  31: left out since MW group takes too long
+                 (but i = 4, 5, 6 are isogenous)
+
+i =  6, N =  31: Sha[pr_5] = 0, reducible: use isogenous Jacobian in database
+
+i = 12, N =  67: #Sha(2) = 4:  [Fisher-Yan]
+
+i = 13, N =  73: #Sha(2) = 4:  [Fisher-Yan]
+                 Sha[pr_3] = 0, reducible: Examples 6.2.5
+
+i = 17, N =  85: Sha[pr_3] = 0, reducible: Examples 6.2.5
+
+i = 27, N = 125: Sha[pr_5] = 0, reducible: Examples 6.2.7
+
+i = 30, N = 133: Sha[pr_3] = 0, reducible: Examples 6.2.6
+
+i = 31, N = 133: #Sha(2) = 4:  [Fisher-Yan]
+
+i = 34, N = 147: Sha[pr_7] = 0, reducible: Examples 6.2.8
+
+i = 39, N = 188: Sha[3] = 0, irreducible, inert: Example 7.4.1
+
+i = 45, N = 211: #Sha(2) = 4:  [Fisher-Yan]
+
+i = 50, N = 245: Sha[pr_7] = 0, reducible: Examples 6.2.8
+
+i = 51, N = 250: check c_2 = 1: LMFDB
+                 Sha[pr_5] = 0, reducible: Examples 6.2.7
+
+i = 54, N = 275: #Sha(2) = 4:  [Fisher-Yan]
+                 Sha[pr_5] = 0, reducible: Examples 6.2.6
+
+i = 55, N = 275: Sha[pr_3] = 0, reducible: Examples 6.2.9
+
+i = 57, N = 289: Sha[pr_3] = 0, reducible: Examples 6.2.9
+                 Sha[pr_17] = 0, reducible: as in Examples 6.2.7
+
+i = 60, N = 313: #Sha(2) = 4:  [Fisher-Yan]
+
+i = 62, N = 334: check c_2 = 1: LMFDB
+
+i = 64, N = 358: check Tamagawa numbers (Tam = 5): LMFDB (c_2 = 5, c_179 = 1)
+                 #Sha(2) = 4:  [Fisher-Yan]
+
+i = 65, N = 375: Sha[pr_5] = 0, reducible: Examples 6.2.7
+
+i = 80, N = 640: #Sha(2) = 4:  [Fisher-Yan] or 2-descent on isogenous Jacobian
+
+i = 81, N = 640: #Sha(2) = 4:  [Fisher-Yan] or 2-descent on isogenous Jacobian
+
+i = 93, N = 841: Sha[pr_29] = 0, reducible: as in Examples 6.2.7
+
+i = 96, N = 887: #Sha(2) = 4:  [Fisher-Yan]
+
+
+Hasegawa curve not isogenous to a curve from LMFDB:
+
+N = 161: nothing to be done
+
+
+Wang curves not isogenous to a curve from LMFDB:
+
+N = 65A: sha_an is off by 3^2 since regular model at 3 cannot be computed
+          otherwise OK
+
+N = 117B: Sha[pr_7] = 0, reducible (\eps_{-3} -> J[pr_7] -> \eps_{-3} \chi_7):
+              Examples 6.2.10 (similar to Examples 6.2.8, bound for dim Sha[pr_7] is 1)
+
+N = 125B: #Sha(2) = 4: OK by computation done by Tom Fisher
+          Sha[pr_5] = 0, reducible (1 \oplus \chi_5):
+              Examples 6.2.10 (similar to Examples 6.2.7, bound for dim Sha[pr_5] is 1)
+
+N = 175: Sha[pr_5] = 0, reducible (bound from 6.2.1 is 2) (1 -> J[pr_5] -> \chi_5):
+              Examples 6.2.10 (using Remark 6.2.2)

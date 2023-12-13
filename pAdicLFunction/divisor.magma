@@ -1,0 +1,68 @@
+//--------------------------------------------------------------------
+//DIVISOR FORMALISM
+//      A divisor is stored as a list of 2-vectors [P,m] where 
+//	P is in P^1(Q) and m is the multiplicity.
+//--------------------------------------------------------------------
+
+
+
+intrinsic point(D::List,n::RngIntElt) -> SeqEnum
+{//Returns the n-th point}
+	return(D[n][1]);
+end intrinsic;
+
+
+intrinsic mult(D::List,n::RngIntElt) -> RngIntElt
+{//Returns the multiplicity of the n-th point}
+	return(D[n][2]);
+end intrinsic;
+
+
+intrinsic scale_divisor(D::List,scale::RngIntElt) -> List
+{//scales the divisor D by scale}
+	for j in [1..#D] do
+		D[j][2]:=D[j][2]*scale;
+	end for;
+	return(D);
+end intrinsic;
+
+
+intrinsic append(D::List,v::SeqEnum,mv::RngIntElt) -> List
+{//Appends on [v,mv] to the divisor D}
+	return(D cat [*<v,mv>*]);
+end intrinsic;
+
+
+intrinsic act_left(M::Mtrx,v::SeqEnum) -> SeqEnum
+{//Acts the matrix M on the vector v (both 2 diml)}
+	return([M[1,1]*v[1]+M[1,2]*v[2],M[2,1]*v[1]+M[2,2]*v[2]]);
+end intrinsic;
+
+
+intrinsic act_left_divisor(M::Mtrx,D::List) -> List
+{//Acts on the divisor D on the left by M}
+        Dnew:=[**];
+        for i in [1..#D] do
+                Dnew:=Dnew cat [*<act_left(M,point(D,i)),mult(D,i)>*];
+	end for;
+        return(Dnew);
+end intrinsic;
+
+
+intrinsic act_left_grp_alg_divisor(T::AlgGrpElt,D::List) -> List
+{//Acts on the divisor D on the left by grp alg elt T}
+	T:=Eltseq(T);
+        Dnew:=[**];
+	for j in [1..#T] do		
+		Dnew:= Dnew cat scale_divisor(act_left_divisor(T[j][2],D),T[j][1]);
+	end for;
+        return(Dnew);
+end intrinsic;
+
+
+intrinsic matrix_to_divisor(M::Mtrx) -> List
+{//returns the divisor M * 0  -  M * Infinity }
+        return([*<[M[1,2],M[2,2]],1>,<[M[1,1],M[2,1]],-1>*]);
+end intrinsic;
+
+

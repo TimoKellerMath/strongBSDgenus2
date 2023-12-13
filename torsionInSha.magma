@@ -1,0 +1,174 @@
+Attach("Tamagawa/main.m");
+Attach("Tamagawa/regularity.m");
+AttachSpec("RealPeriod.spec");
+AttachSpec("Sha.spec");
+
+load "database.magma";
+load "parse_group.magma";
+
+SetLogFile("torsionInSha.log");
+
+SetDebugOnError(true);
+//SetVerbose("HeegnerPoint", 3);
+
+newDB := [];
+
+create_database := false;
+
+if create_database then
+    database_file := Open("database_y_K_JK.m", "w");
+end if;
+
+function verifyBSD(i)
+    Cf:= DB[i];
+    N := Cf`N;
+    C := Cf`C;
+    f := Cf`f;
+    L_rank := Cf`L_rank;
+    discO_J := Cf`discO_J;
+    discO_Af := Cf`discO_Af;
+    TamJQ := Cf`TamJQ;
+    Crec := Cf;
+    printf "N = %o (#%o) of L-rank %o:\n", N, i, L_rank;
+    try
+        // compute first two Heegner discriminants
+        Crec`H_discs := [];
+        Crec`H_fields := [];
+        Crec`I_bounds := [];
+        Crec`H_primes := {};
+        Crec`H_points := [* *];
+        Crec`MWs := [* *];
+        Crec`MWtoJKs := [* *];
+        D_K := -3;
+        I_bound_with_hK := 0;
+        nI_K := 0;
+        while nI_K lt 1 do
+            D_K := NextHeegnerDiscriminant(N, D_K);
+            while IsEven(D_K) or D_K eq -3 do
+                D_K := NextHeegnerDiscriminant(N, D_K);
+            end while;
+            K := NumberField(Polynomial([-D_K, 0, 1]));
+            if L_rank eq 1 then
+                Zf := CoefficientRing(f);
+                I := ideal<Zf | 0>;
+                eta := KroneckerCharacter(D_K);
+                for n in [n : n in [2..200] | GCD(n, N * D_K) eq 1] do
+                    I +:= ideal<Zf | Coefficient(f, n) - Coefficient(f, n) * eta(n)>;
+                    if I eq ideal<Zf | 1> then
+                        break;
+                    end if;
+                end for;
+                if not IsPowerOf(Abs(Norm(I)), 2) then
+                    badPrimes := {frp[1] : frp in Factorization(I)};
+                    printf "bad primes: %o\n", badPrimes;
+                    printf "there are bad primes, trying next D_K.\n";
+                    continue;
+                end if;
+            end if;
+            printf "trying D_K = %o ... \n", D_K;
+            time I_K, _, _, _, _, y_Ks, MWtoJ := HeegnerIndex(C, f : D := D_K);
+            printf "I_K = %o\n", Factorization(I_K);
+            Append(~Crec`H_discs, D_K);
+            Append(~Crec`H_fields, K);
+            Append(~Crec`I_bounds, I_K);
+            Append(~Crec`H_points, y_Ks[1]);
+            Append(~Crec`MWs, Domain(MWtoJ));
+            Append(~Crec`MWtoJKs, MWtoJ);
+            I_bound_with_hK := GCD(I_bound_with_hK, L_rank eq 0 select I_K else I_K * ClassNumber(K));
+
+            nI_K +:= 1;
+        end while;
+
+        time sha_an_K := Integers()!ShaAnOverK(C, N);
+        printf "#Sha(J/K)_an = %o = %o\n", sha_an_K, Factorization(sha_an_K);
+
+        CK := QuadraticTwist(C, D_K);
+        JK := Jacobian(CK);
+
+        galreps := galrep_info(f, 200 : D := D_K);
+        Sred := {gi[1] : gi in galreps | "R" in gi[2]};
+        if #Sred gt 0 then
+            O := Order(galreps[1][1]);
+        else
+            O := Integers(QuadraticField(discO_J));
+        end if;
+        S := #Sred gt 0 select Sred else {Parent(ideal<O | 1>)| };
+        reduciblep := [Characteristic(ResidueClassField(frp)) : frp in S];
+        printf "reducible Galois representations for primes above %o.\n", reduciblep;
+        reduciblep := Set(reduciblep);
+        // CHECKME: is this the correct conductor? (the problem might be how Magma computes the discriminant)
+        // should be the square of the conductor
+        fO := ExactQuotient(discO_J, Discriminant(O));
+        // the non-regular prime ideals of O
+        SEulerSystem := &join{{Universe(S)| frp[1] : frp in Decomposition(O, p)} : p in PrimeDivisors(fO)};
+        S join:= SEulerSystem;
+        // the prime ideals above 2
+        S2 := {Universe(S)| frp[1] : frp in Decomposition(O, 2)};
+        sha2 := ExactQuotient(#TwoSelmerGroup(JK), #TwoTorsionSubgroup(JK) * 2^(2 * (1 - L_rank)));
+        printf "#Sha(J^K/Q)[2] = %o\n", sha2;
+        S join:= S2;
+
+        printf "gcd(I_bounds) = %o\n", Factorization(I_bound_with_hK);
+        SEulerSystem join:= &join{{frp[1] : frp in Decomposition(O, p)} : p in PrimeDivisors(I_bound_with_hK)};
+        // we don't need to check Tam(J/K) (Lemma 4.5.1) because we include frp | 2 in S
+        printf "odd prime divisors of Tam(J^K/Q) = %o\n", PrimeDivisors(TamJQ);
+        SEulerSystem join:= &join{{frp[1] : frp in Decomposition(O, p)} : p in PrimeDivisors(TamJQ)};
+        S join:= SEulerSystem;
+        printf "The support of Sha(J^K/Q) is contained in S = %o.\n", {Characteristic(ResidueClassField(frp)) : frp in S};
+
+        Sred := Sred diff S2;
+        SEulerSystem := SEulerSystem diff S2;
+        SEulerSystem := SEulerSystem diff Sred;
+
+        sha_Jtw_an := Integers()!ShaAnRk0(C, N : D := D_K);
+        printf "#Sha(J^K/Q)_an = %o\n",sha_Jtw_an;
+        printf "#Sha(J^K/Q)_an[2] = 2^%o\n", Valuation(sha_Jtw_an, 2);
+        // if #Sha(J/Q)[2] = 1 or 2, then #Sha(J/Q)[2^infty] = 1 or 2, respectively
+        if sha2 in {1,2} then
+            assert Valuation(sha_Jtw_an, 2) eq Valuation(sha2, 2);
+            S := S diff S2;
+            S2 := {};
+        end if;
+        assert sha_Jtw_an/2^Valuation(sha_Jtw_an, 2) eq sha_an_K/2^Valuation(sha_an_K, 2);
+
+        if #S eq 0 then
+            printf "BSD is true with #Sha(J^K/Q) = #Sha(J^K/Q)_an = %o.\n", sha_Jtw_an;
+        else
+            printf "It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:\n";
+            if S2 ne {} then
+                printf "* for %o prime ideals above 2 of degree(s) %o.\n", #S2, [Degree(frp) : frp in S2];
+            end if;
+            if Sred ne {} then
+                printf "* performing a frp isogeny descent for prime ideals above <p, deg(frp)>\n  %o.\n",
+                    [<Characteristic(ResidueClassField(frp)), Degree(frp)> : frp in Sred];
+            end if;
+            if SEulerSystem ne {} then
+                for frp in SEulerSystem do
+                    p := Characteristic(ResidueClassField(frp));
+                    printf "* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>\n  %o.\n",
+                        [<p, Degree(frp)> : frp in SEulerSystem];
+                    if IsDivisibleBy(N, p) then 
+                        printf "  [How04] does not apply to frp = %o since p | N.\n", <p, Degree(frp)>;
+                    else
+                        printf "  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of %o.\n  #Sha(J^K/Q)_an predicts an upper bound of %o.\n",
+                            2*Valuation(I_K, p), Valuation(sha_an_K, p);
+                    end if;
+                end for;
+            end if;
+        end if;
+        return true, Crec;
+    catch e
+        printf "%o\n", e;
+    end try;
+    printf "\n";
+    return false, _;
+end function;
+
+SetClassGroupBounds("GRH");
+for i -> Cf in DB do
+  if Cf`L_rank ne 1 or i notin [30, 55, 57, 74, 77, 82] then 
+    continue;
+  end if;
+  flag, Crec := verifyBSD(i);
+  printf "\n";
+end for;

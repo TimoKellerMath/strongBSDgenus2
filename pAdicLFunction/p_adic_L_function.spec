@@ -1,0 +1,30 @@
+{
+	helper.magma
+	p1.magma
+	matrix.magma
+	funddomain.magma
+	divisor.magma
+	M2modules.magma
+	Lk.magma
+	distributions.magma
+	distributions_M2.magma
+	modsym.magma
+	modsym_dist.magma
+	hecke.magma
+	difference_eqn.magma
+	iterate_Up.magma
+	p_adic_L_function.magma
+	PrintRngPadElt.magma
+	../EvaluateModularSymbols.m
+	../periods.m
+	../RealPeriod.m
+	../Tamagawa_pkg2.m
+	../ManinConstant.m
+	../MWgroup.m
+	../endomorphisms_kernel.m
+	../endomorphisms.m
+	../CrvHypConversion.m
+	../jacmaps.m
+	../HeegnerPoint.m
+	../ShaAn.m
+}

@@ -1,0 +1,24 @@
+load "verifyBSD.magma"; // compute the remaining data, especially
+
+// print a TeX table for the Heegner point data
+
+procedure print_list(list)
+    if #list eq 0 then
+        return;
+    end if;
+    for i in [1..#list-1] do
+        printf "%o, ", list[i];
+    end for;
+    printf "%o", list[#list];
+end procedure;
+
+printf "N & $L$-rank & $\\deg(\\pi)$ & multiple of $I_K$ & $D_K$'s \\\\\n";
+for data in newDB do
+    printf "%o.%o & $%o$ & $%o$ & ", data`N, data`class, data`L_rank, data`isog_deg;
+    printf "$";
+    print_list(Setseq(data`H_primes));
+    printf "$ & $";
+    print_list(data`H_discs);
+    printf "$";
+    printf "\\\\\n";
+end for;

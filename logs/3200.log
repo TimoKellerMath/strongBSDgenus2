@@ -1,0 +1,110 @@
+f = q + a*q^3 + (-2*a + 4)*q^7 + (2*a - 2)*q^9 + (-3*a + 2)*q^11 + O(q^12)
+
+HeegnerIndex: N = 3200, D = -31
+HeegnerPoint: N = 3200
+              C: y^2 = -10*x^6 + 100*x^5 - 320*x^4 + 400*x^3 - 380*x^2 + 200*x -
+40
+              D = -31, L-rank = 0, prec = 462
+
+The Heegner cycle has degree h = 3
+Computing 4125 terms of the Fourier expansion for the period matrix of A_f of 
+precision 20 ...
+period matrices are isogenous by an isogeny of degree 1
+precision target not reached, increasing precision to 30
+Computing 5595 terms of the Fourier expansion for the period matrix of A_f of 
+precision 30 ...
+period matrices are isogenous by an isogeny of degree 1
+bound for #ker(isogeny)|A_f(K) is 1
+computing 195680 terms of the q-expansion for y_K of precision 462 ...
+computing 391602 terms of the q-expansion for y_K of precision 462 ...
+computing 783700 terms of the q-expansion for y_K of precision 462 ...
+y_K given by
+  apol = $.1^2 - 16542417669823414589952459375172717811274/29980381025580983838\
+05773477608701882269*$.1 + 48683564890649555163637461050390206727469/2998038102\
+5580983838057734776087018822690
+  bpol = 2158879833169338746165270144343048067348844357670435668619392237890173\
+7104343402/89882324643901628429401311129104806190878377785403917356891915401038\
+23536588361*w*$.1 - 30560305979138426509936729910237924336694748928088040547029\
+804474854997613941243/898823246439016284294013111291048061908783777854039173568\
+91915401038235365883610*w
+gen*y_K given by
+  apol = $.1^2 - 77925177013943994254059460404309933302029651652335285052435412\
+7287370203214467265320/15659106260555259565871224268426736629869965711841235292\
+5462788137060200646647301141*$.1 + 11384590728802105994981945852904681360041924\
+1921221354324200293769979836308438684280/52197020868517531886237414228089122099\
+566552372804117641820929379020066882215767047
+  bpol = 9655049132538847443085393790008888732751020254162974755253729583777693\
+6704251466511842784001547506558277609348380718826094993338223506676555040756522\
+59567739354623183/2452076088793609246880262537766615642667033438853949161668890\
+9091426314863360746557464502269147117876451684772586548988328847806472914198550\
+099481844108472939139901881*w*$.1 + 4650499671118705388573112301047181849526731\
+9704048733922618633434192374351682963188296868471273546246902942001733326949313\
+6497221718264673185205647796277645295731440/81735869626453641562675417925553854\
+7555677812951316387222963636380877162112024885248816742304903929215056159086218\
+2996109615935490971399516699827281369490979713300627*w
+                L-rank = 0, isogeny degree = 1
+                disc(End(A_f)) = 8, disc(End(J)) = 8, kernel_bound = 1
+                y = (x^2 - 16542417669823414589952459375172717811274/2998038102\
+558098383805773477608701882269*x + 48683564890649555163637461050390206727469/29\
+980381025580983838057734776087018822690, 
+2158879833169338746165270144343048067348844357670435668619392237890173710434340\
+2/89882324643901628429401311129104806190878377785403917356891915401038235365883\
+61*w*x - 3056030597913842650993672991023792433669474892808804054702980447485499\
+7613941243/89882324643901628429401311129104806190878377785403917356891915401038\
+235365883610*w, 2)
+
+J(K) has invariants [ 0, 0 ]
+
+group structure of quotient: [ 7 ], index = 7
+
+                index_J = 7, D = -31
+Time: 203141.890
+I_K = 7
+required coefficients for L-series: 568
+Evaluating L(f, 1) to precision 20 ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    x + 1 over the Rational Field
+Regular model could not be constructed at p = 2 for Hyperelliptic Curve defined 
+by y^2 = -10*x^6 + 100*x^5 - 320*x^4 + 400*x^3 - 380*x^2 + 200*x - 40 over 
+Rational Field
+Compensation factor (and hence the real period) could be off by a power of 2
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    x + 1 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 -
+    x + 1 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 -
+    3*x + 3 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    x + 1 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 -
+    x + 1 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    x + 1 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    3*x + 3 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 -
+    x + 1 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    3*x + 3 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    3*x + 3 over the Rational Field
+c_2(J/Q): trying again ...
+WARNING: Extending the base field to Number Field with defining polynomial x^2 -
+    x + 1 over the Rational Field
+error Runtime error: Fibre blowups over number fields not yet implemented in 
+c_2(J), using c_2 = 1 instead.
+ShaAnRk0:
+LR = 49, C = 1/4, cfcpi = 1/2, #ker = 1, #coker = 1, #tors = 1, Tam = 1
+Time: 87.840
+#Sha(J/Q)_an = 98
+
+Total time: 203235.910 seconds, Total memory usage: 3273.69MB

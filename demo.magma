@@ -1,0 +1,61 @@
+SetDebugOnError(true);
+
+load "verifyBSD.magma";
+
+HasegawaLevelsRank0 :=
+  [<23, [], [11]>, <29, [], [7]>, <31,[], [5]>, <35,[7], [17]>, <39,[13], [7]>, <87,[29], [5]>];
+HasegawaLevelsRank1 :=
+  [<67,[67], []>, <73,[73], []>, <85,[5,17], []>, <93,[3,31], []>, <103,[103], []>, <107,[107], []>, <115,[5,23], []>, <125,[125], []>, <133,[7,19], []>,
+  <147,[3,49], []>, <161,[7,23], []>,
+  <165,[3,5,11], []>, <167,[167], []>, <177,[3,59], []>, <191,[191], []>, <205,[5,41], []>, <209,[11,19], []>, <213,[3,71], []>,
+  <221,[13,17], []>, <287,[7,41], []>, <299,[13,23], []>, <357,[3,7,17], []>];
+
+/*printf "%o Hasegawa curves with L-rank 0:\n", #HasegawaLevelsRank0;
+for Nws in HasegawaLevelsRank0 do 
+  N := Nws[1];
+  C := SimplifiedModel(X0NQuotient(N, Nws[2]));
+  printf "X_0(%o)/w%o:\n", N, Nws[2];
+  flag := verifyBSD(C, N);
+  printf "\n";
+end for;
+
+printf "%o Hasegawa curves with L-rank 1:\n", #HasegawaLevelsRank1;
+for Nws in HasegawaLevelsRank1 do 
+  N := Nws[1];
+  C := SimplifiedModel(X0NQuotient(N, Nws[2]));
+  printf "X_0(%o)/w%o:\n", N, Nws[2];
+  flag, Crec := verifyBSD(C, N);
+  printf "\n";
+end for;*/
+SetVerbose("HeegnerPoint", 4);
+for Nws in HasegawaLevelsRank1 do 
+  N := Nws[1];
+  if N ne 161 then // only J_0(161)^{w_7,w_23} is not isogenous to an LMFDB example
+    continue;
+  end if;
+  C := SimplifiedModel(X0NQuotient(N, Nws[2]));
+  printf "X_0(%o)/w%o:\n", N, Nws[2];
+  flag := verifyBSD(C, N);
+  printf "\n";
+end for;
+
+/*
+// Wang curves that are not LMFDB curves
+_<x> := PolynomialRing(Rationals());
+WangCurves := [
+    //< 63, HyperellipticCurve(14*x^3 - 7, x^3 - 1), 0>, // not absolutely simple
+    //<117, HyperellipticCurve(3*x^3 - 7, x^3 - 1), 0>, // not absolutely simple
+    <117, HyperellipticCurve(-x^6 - 3*x^4 - 5*x^3 - 12*x^2 - 9*x - 7, x^3 + 1), 0>,
+    <175, HyperellipticCurve(-x^5 - x^4 - 2*x^3 - 4*x^2 - 2*x - 1, x^3 + x^2 + 1), 0>
+    //<189, HyperellipticCurve(x^3 - 7, x^3 - 1), 0> // not absolutely simple
+];
+printf "%o 'Wang curves':\n", #WangCurves;
+
+for NC in WangCurves do
+    N, C, L_rank := Explode(NC);
+    printf "N = %o: C: %o (L-rk = %o)\n", N, C, L_rank;
+    C := SimplifiedModel(C);
+    flag := verifyBSD(C, N);
+    printf "\n";
+end for;
+*/

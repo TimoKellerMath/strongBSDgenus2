@@ -1,0 +1,4 @@
+intrinsic SturmBound(N::RngIntElt, k::RngIntElt) -> RngIntElt
+{Returns the Sturm bound for eigenforms of level N and weight k.}
+  return Ceiling(k/12.0 * N * &*[1 + 1/p : p in PrimeDivisors(N)]) + 1;
+end intrinsic;

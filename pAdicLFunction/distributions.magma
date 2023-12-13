@@ -1,0 +1,466 @@
+//This file contains the formalism behind representing (overconvergent)
+//distributions (i.e. the dual of rigid functions that convergent on some
+//disc containing the unit disc).  Here we view these distributions as
+//log-differentials on wide-open spaces.  See section ? or ?.
+
+//A log-differential is stored as a power series in z so that 
+//
+//	\sum_{i=0}^\infty a_i z^(-i} dz/z 
+//
+//is represented by 
+//
+//	\sum_{i=0}^M a_i z^i  + O(z^M) 
+//
+//(Note that z^{-1} is replaced by z.)
+
+//These distributions have a natural right action by S_0(p) equal to 
+//matrices [a,b;c,d] with $a$ a unit at p and c divisible by p.
+
+//The phrase "raw distributions" refers to the fact that all 
+//functions in this file deal just with power series in z.  Because of
+//the weight k matrix action, we will have a data structure of the form
+//[*"dist",[f(w),k]*] that forms an  "M2-module" and such an element we
+//will refer to as a "distribution".
+
+
+intrinsic raw_dist_precision(f::RngSerElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// raw_dist_precision(f)
+//
+// Input:
+//	f = raw distribution
+//
+// Output:
+//	The number of coefficients stored in f.  That is, if
+//	f = \sum_(i=0)^(M-1) a_i w^i  then M is returned.
+//-------------------------------------------------------------------------}
+
+	return(AbsolutePrecision(f));
+end intrinsic;
+
+
+intrinsic raw_dist_adjust_precision(f::RngSerElt,M::RngIntElt) -> RngSerElt
+{//-------------------------------------------------------------------------
+// raw_dist_adjust_precision(f,M)
+//
+// Input:
+//	f = raw distribution
+//	M = integer
+//
+// Output:
+//	Returns f + O(w^M)
+//-------------------------------------------------------------------------}
+	w := Parent(f).1;
+	return(f+O(w^M));
+end intrinsic;
+
+
+intrinsic raw_dist_normalize(f::RngSerElt,pfr::RngOrdIdl) -> RngSerElt
+{//-------------------------------------------------------------------------
+// raw_dist_normalize(f)
+//
+// Input:
+//      f = raw distribution with coefficients in Z_p
+//
+// Output:
+//      Returns the image of f in its associated "finite approximation module"
+//	(See section ? of ?)
+//
+//	That is, if 
+//		f = \sum_(i=0)^(M-1) a_i w^i 
+//	then
+//		f = \sum_(i=0)^(M-1) a_i (mod p^(M-i)) w^i 
+//	is returned.
+//-------------------------------------------------------------------------}
+	M := raw_dist_precision(f);
+	w := Parent(f).1;
+	R := Order(pfr);
+	temp := O(w^M);
+	for k in [0..M-1] do
+		rat := Coefficient(f,k);
+		RmodPfr := quo<R | pfr^(M-k)>;
+		numerator := RmodPfr!Numerator(rat);
+		denominator := RmodPfr!Denominator(rat);
+		require denominator ne 0: "dividing by 0 mod pfr^(M-k). Check whether one has integral moments.";
+		coeff := numerator / denominator;
+		temp +:= R!coeff * w^k;
+	end for;
+	return temp;
+end intrinsic;
+
+intrinsic raw_dist_normalize_mod(f::RngSerElt,pfr::RngOrdIdl) -> RngSerElt
+{}
+	M:=raw_dist_precision(f);
+	R := Order(pfr);
+	RpM<z>:=LaurentSeriesRing(R,M);
+	v:=Eltseq(f);
+	if v eq [] then
+		return Zero(RpM);
+	else
+		r:=0;
+		while Coefficient(f,r) eq 0 do
+			Insert(~v,1,0);
+			r:=r+1;
+		end while;
+		
+		w := [];
+		for j in [0..#v-1] do
+			RmodPfr := quo<R | pfr^(M-j)>;
+			Append(~w, R!(RmodPfr!(R!v[j+1])));
+		end for;
+	end if;
+
+	return RpM!w;
+end intrinsic;
+
+
+
+intrinsic act_right_raw_dist_weight_zero(f::RngSerElt,mat::Mtrx) -> RngSerElt
+{//-------------------------------------------------------------------------
+// act_right_raw_dist_weight_zero(f,mat)
+//
+// Input:
+//      f = raw distribution
+//	mat = 2x2 matrix in S_0(p)
+//
+// Output:
+//	f |_0 mat  (i.e. the right weight zero action of mat on f)
+//-------------------------------------------------------------------------}
+	Z := Integers();
+	M:=raw_dist_precision(f);
+	w := Parent(f).1;
+	a:=Z!mat[1,1];
+	b:=Z!mat[1,2];
+	c:=Z!mat[2,1];
+	d:=Z!mat[2,2];
+	det:=a*d-b*c;
+
+	answer:=Coefficient(f,0)+O(w^M);
+	answer:=answer+Coefficient(f,0)*b/a * w/(1-w*b/a);
+	for r in [1..M-1] do 
+		answer:=answer+Coefficient(f,r)*det*(d*w-c)^(r-1)/(-b*w+a)^(r+1)*w;
+	end for;
+
+	return(answer);
+end intrinsic;
+
+intrinsic act_right_raw_dist_weight_zero_quick(f::RngSerElt,mat::Mtrx,ACT::List,INDEX::SeqEnum) -> RngSerElt
+{}
+	M:=raw_dist_precision(f);
+	Z := Integers();
+	Q := Rationals();
+	R<w> := Parent(f);
+	a:=Z!mat[1,1];
+	b:=Z!mat[1,2];
+	c:=Z!mat[2,1];
+	d:=Z!mat[2,2];
+	det:=a*d-b*c;
+	ind := Position(INDEX,[a,b,c,d]);
+	
+	v:=Eltseq(f);
+	r:=0;
+	if #v ne 0 then
+		while Coefficient(f,r) eq 0 do
+			Insert(~v,1,0);
+			r:=r+1;
+		end while;
+	end if;
+	while #v lt M do
+		Append(~v,0);
+	end while;
+	v:=Matrix(Parent(ACT[ind][1,1]), M,1, v);
+
+	answer:=ACT[ind]*v;
+
+	answer[1][1]:=answer[1][1]+Coefficient(f,0);
+	ans:=R!Eltseq(answer);
+
+	return(ans);
+end intrinsic;
+
+intrinsic act_right_special(v::Any,mat::Mtrx,pfr::RngOrdIdl,ACT::List,INDEX::SeqEnum) -> M2ZElt
+{}
+	Z := Integers();
+	a:=Z!mat[1,1];
+	b:=Z!mat[1,2];
+	c:=Z!mat[2,1];
+	d:=Z!mat[2,2];
+	det:=a*d-b*c;
+	ind := Position(INDEX,[a,b,c,d]);
+	
+	v:=Matrix(Parent(ACT[ind][1,1]), v);
+	answer:=ACT[ind]*v;
+
+	answer[1][1]:=answer[1][1]+v[1][1];
+	RR:=LaurentSeriesRing(Order(pfr));
+	ans:=RR!Eltseq(answer);
+
+	return(form_dist(ans,0,pfr));
+end intrinsic;
+
+
+function act_right_special3(f,mat,ACT,INDEX)
+	Z := Integers();
+	M:=raw_dist_precision(f);
+	w := Parent(f).1;
+	a:=Z!mat[1,1];
+	b:=Z!mat[1,2];
+	c:=Z!mat[2,1];
+	d:=Z!mat[2,2];
+	det:=a*d-b*c;
+
+		ans := [];
+                Append(~ans,b/a * w/(1-w*b/a));
+		first:=det*w/(a-b*w)^2;
+		Append(~ans,first);
+		ratio:=(d*w-c)/(-b*w+a);
+		for r in [2..M-1] do
+			Append(~ans,ans[#ans]*ratio);
+		end for;
+
+	answer:=Coefficient(f,0)+O(w^M);
+	answer:=answer+Coefficient(f,0)*ans[1];
+	for r in [1..M-1] do 
+		answer:=answer+Coefficient(f,r)*ans[r+1];
+	end for;
+
+	return(form_dist(answer,0));
+end function;
+
+function act_right_special2(f,mat,ACT,INDEX)
+	Z := Integers();
+	M:=raw_dist_precision(f);
+	w := Parent(f).1;
+	a:=Z!mat[1,1];
+	b:=Z!mat[1,2];
+	c:=Z!mat[2,1];
+	d:=Z!mat[2,2];
+	det:=a*d-b*c;
+
+	answer:=Coefficient(f,0)+O(w^M);
+	answer:=answer+Coefficient(f,0)*b/a * w/(1-w*b/a);
+	for r in [1..M-1] do 
+		answer:=answer+Coefficient(f,r)*det*(d*w-c)^(r-1)/(-b*w+a)^(r+1)*w;
+	end for;
+
+	return(form_dist(answer,0));
+end function;
+
+
+
+
+intrinsic act_right_raw_dist(f::RngSerElt,mat::Mtrx,k::RngIntElt) -> RngSerElt 
+{//-------------------------------------------------------------------------
+// act_right_raw_dist(f,mat,k) 
+//
+// Input:
+//      f = raw distribution
+//	mat = 2x2 matrix with p|c and (a,p)=1
+//	k = weight (minus 2)
+//
+// Output:
+//	f |_k mat (i.e. the right weight k action of mat on f)
+//-------------------------------------------------------------------------}
+	if k eq 0 then
+		return(act_right_raw_dist_weight_zero(f,mat));
+	else
+		M:=raw_dist_precision(f);
+		w := Parent(f).1;
+		a:=mat[1,1];
+		b:=mat[1,2];
+		c:=mat[2,1];
+		d:=mat[2,2];
+		det:=a*d-b*c;
+		if k ge 0 then
+			g:=(a+c*w^(-1))^k*f;
+		else
+			S<A>:=LaurentSeriesRing(CoefficientRing(Parent(f)));
+			g:=Evaluate(f,A);
+			temp:=0;
+			for j in [0..M-1] do
+				temp := temp + (c/a)^j*A^(-j);
+			end for;
+			temp2 := a^k * temp^(-k);
+			g:=temp2*g;        
+			g:=Evaluate(Evaluate(g,w^(-1)),w^(-1));
+		end if;
+	end if;
+
+	return(act_right_raw_dist_weight_zero(g,mat));
+end intrinsic;
+
+intrinsic act_right_raw_dist_quick(f::RngSerElt,mat::Mtrx,k::RngIntElt,ACT::List,INDEX::SeqEnum) -> RngSerElt 
+{}
+	if k eq 0 then
+		return(act_right_raw_dist_weight_zero_quick(f,mat,ACT,INDEX));
+	else
+		M:=raw_dist_precision(f);
+		w := Parent(f).1;
+		a:=mat[1,1];
+		b:=mat[1,2];
+		c:=mat[2,1];
+		d:=mat[2,2];
+		det:=a*d-b*c;
+		if k ge 0 then
+			g:=(a+c*w^(-1))^k*f;
+		else
+			S<A>:=LaurentSeriesRing(CoefficientRing(Parent(f)));
+			g:=Evaluate(f,A);
+			temp:=0;
+			for j in [0..M-1] do
+				temp := temp + (c/a)^j*A^(-j);
+			end for;
+			temp2 := a^k * temp^(-k);
+			g:=temp2*g;        
+			g:=Evaluate(Evaluate(g,w^(-1)),w^(-1));
+		end if;
+	end if;
+
+	return(act_right_raw_dist_weight_zero_quick(g,mat,ACT,INDEX));
+end intrinsic;
+
+
+intrinsic act_right_raw_dist_improved(f::RngSerElt,pfr::RngOrdIdl,mat::Mtrx,k::RngIntElt) -> RngSerElt
+{//-------------------------------------------------------------------------
+// act_right_raw_dist_improved(f,mat,k)
+//
+// Input:
+//      f = raw distribution = \sum a_i w^i where p^(k+1-i) divides a_i
+//	mat = 2x2 matrix with c=0 and det(mat)=p
+//	k = weight (minus 2)
+//
+// Output:
+//	This is a funny procedure.  It computes exactly 1/p * (f |_k mat) 
+//	except for the coefficients 0..k-1.  These coefficients are just
+//	thrown away.  This function is used in up_modsym which computes
+//	u_p := U_p/p exactly on symbols of slope >= 1.  
+//-------------------------------------------------------------------------}
+	M:=raw_dist_precision(f);
+	w := Parent(f).1;
+	p := PrimeFactors(AbsoluteNorm(pfr))[1];
+	a:=aa(mat);
+	b:=bb(mat);
+	c:=cc(mat);
+	d:=dd(mat);
+	error if c ne 0, "error in act_right_raw_dist_improved: c ne 0";
+	det:=a*d-b*c;
+	error if det ne p, "error in act_right_raw_dist_improved: det ne p";
+	
+	//terms coming from \delta_0
+	g:=Coefficient(f,0)/p^(k+1)+O(w^M);
+	for m in [1..M-1] do
+		g := g + Coefficient(f,0)/p^(k+1)*b^m*a^(-m)*w^m;
+	end for;
+
+	//terms coming from dz/z^2,...,dz/z^(k+1)
+	for j in [1..k] do
+		g := g + Coefficient(f,j)/p^(k+1-j) * (d/p)^(j-1) * (-b*w + a)^(-j-1) * w^j;
+	end for;
+
+	//terms coming from dz/z^(k+2),...
+	for j in [k+1..M-1] do
+		g := g + (d/p)^k *Coefficient(f,j) * d^(j-k-1) * (-b*w + a)^(-j-1) * w^j;
+	end for;
+
+	//throw away terms from dz/z to dz/z^(k+1)
+	for j in [0..k] do
+		g := g - Coefficient(g,j) * w^j;
+	end for;
+
+	return raw_dist_normalize(g);
+end intrinsic;
+	
+
+intrinsic raw_dist_total_measure(f::RngSerElt) -> RngElt
+{//-------------------------------------------------------------------------
+// raw_dist_total_measure(f)
+//
+// Input:
+//      f = raw distribution
+//
+// Output:
+//	The total measure of f (i.e. a_0(f))
+//-------------------------------------------------------------------------}
+
+	return(Coefficient(f,0));
+end intrinsic;
+
+
+intrinsic raw_dist_valuation_list(f::RngSerElt,pfr::RngOrdIdl) -> SeqEnum
+{//-------------------------------------------------------------------------
+// raw_dist_valuation_list(f)
+//
+// Input:
+//      f = raw distribution
+//
+// Output:
+//	A list of the valuations of the coefficients of f
+//-------------------------------------------------------------------------}
+	M:=raw_dist_precision(f);
+	return [Valuation(Coefficient(f,k),pfr) : k in [0..M-1]];
+end intrinsic;
+
+
+intrinsic raw_dist_specialize(f::RngSerElt,k::RngIntElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// raw_dist_specialize(f)
+//
+// Input:
+//      f = raw distribution
+//
+// Output:
+//	The image under the specialization map from D_k ---> L_k.
+//	See section ? of ?.
+//-------------------------------------------------------------------------}
+	S<T>:=PolynomialRing(CoefficientRing(Parent(f)));
+	g:=Zero(S);
+	for r in [0..k] do
+		g:=g+Binomial(k,r)*(-1)^(k-r)*Coefficient(f,k-r)*T^r;
+	end for;
+	return form_Lk(g,k);
+end intrinsic;
+
+
+intrinsic raw_dist_random(pfr::RngOrdIdl,M::RngIntElt) -> RngLaurSerElt
+{//-------------------------------------------------------------------------
+// raw_dist_random(M)
+//
+// Input:
+//	M = integer
+//
+// Output:
+//	returns a random normalized distribution with M coefficients
+//-------------------------------------------------------------------------}
+	R := Order(pfr);
+	RR<w>:=LaurentSeriesRing(R, M);
+	g := O(w^M);
+	for j in [0..M-1] do
+		g +:= Random(quo<R | pfr^(M-j)>) * w^j;
+	end for;
+
+	return g;	
+end intrinsic;
+
+
+intrinsic raw_dist_random_measure_zero(pfr::RngOrdIdl,M::RngIntElt) -> RngLaurSerElt
+{//-------------------------------------------------------------------------
+// raw_dist_random_measure_zero(M)
+//
+// Input:
+//      M = integer
+//
+// Output:
+//      returns a random normalized distribution with M coefficients
+//	with total measure zero
+//-------------------------------------------------------------------------}
+	R := Order(pfr);
+	RR<w>:=LaurentSeriesRing(R, M);
+	g := O(w^M);
+	for j in [1..M-1] do
+		g +:= Random(quo<R | pfr^(M-j)>) * w^j;
+	end for;
+
+	return g;	
+end intrinsic;
+
+

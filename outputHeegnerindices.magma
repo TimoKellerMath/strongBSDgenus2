@@ -1,0 +1,94 @@
+Attach("Tamagawa/main.m");
+Attach("Tamagawa/regularity.m");
+AttachSpec("RealPeriod.spec");
+AttachSpec("Sha.spec");
+
+load "database.magma";
+
+SetLogFile("heegnerIndices.log");
+
+SetVerbose("HeegnerPoint", true);
+SetDebugOnError(true);
+
+function tamagawa_number(C, p : n_tries := 10)
+    try
+        Cp := RegularModel(C, p);
+        return TamagawaNumber(Cp), true;
+    catch e 
+        if n_tries gt 0 then
+            printf "c_%o(J/Q): trying again ...\n", p;
+            return $$(C, p : n_tries := n_tries - 1);
+        else
+            printf "error %o in c_%o(J), using c_%o = 1 instead.\n", e, p, p;
+            return 1, false;
+        end if;
+    end try;
+end function;
+
+function tamagawa_product(C, N : n_tries := 10)
+    c := 1;
+    for p in PrimeDivisors(N) do 
+        c *:= tamagawa_number(C, p);
+    end for;
+    return c;
+end function;
+
+
+remaining_bad_primes := [];
+for i -> Cf in DB do
+    try
+        galreps := Cf`galreps;
+        reducible_primes := [Integers() | PrimeDivisors(Norm(rhop[1]))[1] : rhop in galreps | "R" in rhop[2]];
+         // ignore the prime 2; Tam(J/K) = Tam(J/Q) * 2^?, so it is ok to consider Tam(J/Q) only
+         // list the primes p > 2 for which rho_frp is irreducible and the Euler system does not prove Sha[frp] = 0
+        if Cf`L_rank eq 0 then 
+            bad_primes := (Set(PrimeDivisors(Cf`TamJQ * Cf`I_bound)) diff Set(reducible_primes)) diff {2};
+        else
+            bad_primes := (Set(PrimeDivisors(ClassNumber(QuadraticField(Cf`H_discs[1])) * Cf`TamJQ * Cf`I_bound)) diff Set(reducible_primes)) diff {2};
+        end if;
+        very_bad_primes := bad_primes meet Set(PrimeDivisors(Cf`TamJQ));
+
+        if #bad_primes ne 0 then 
+            printf "N = %o (%o): %o (very bad: %o)\n", Cf`N, Cf`label, bad_primes, very_bad_primes;
+            if #very_bad_primes gt 0 then
+                continue;
+            end if;
+            //[Valuation(Cf`N,p) : p in bad_primes];
+            D_K := Cf`H_discs[1];
+            D_K := NextHeegnerDiscriminant(Cf`N, D_K);
+            printf "trying next D_K = %o ... ", D_K;
+            while Cf`L_rank eq 1 and ((Set(PrimeDivisors(ClassNumber(QuadraticField(D_K)) * Cf`TamJQ)) meet bad_primes) eq bad_primes) do
+                D_K := NextHeegnerDiscriminant(Cf`N, D_K);
+                printf "trying next D_K = %o ... ", D_K;
+                if Abs(D_K) gt 300 then 
+                    printf "no small Heegner discriminant found!\n";
+                    continue i;
+                end if;
+            end while;
+            I_K := HeegnerIndex(Cf`C, Cf`N, Cf`f : D := D_K);
+            
+            if Cf`L_rank eq 0 then
+                printf "gives I_K  = %o.\n", Factorization(I_K);
+                remaining_bad_p := bad_primes meet Set(PrimeDivisors(Cf`TamJQ * I_K));
+                printf "remaining bad primes: %o\n", remaining_bad_p;
+                if #remaining_bad_p ne 0 then 
+                    Append(~remaining_bad_primes, <Cf`label, Cf`N, remaining_bad_p>);
+                end if;
+            else
+                h_K := ClassNumber(QuadraticField(D_K));
+                printf "gives I_K * h_K = %o * %o.\n", Factorization(I_K), Factorization(h_K);
+                remaining_bad_p := bad_primes meet Set(PrimeDivisors(Cf`TamJQ * I_K * h_K));
+                printf "bad primes: %o\n", remaining_bad_p;
+                if #remaining_bad_p ne 0 then 
+                    Append(~remaining_bad_primes, <Cf`label, Cf`N, remaining_bad_p>);
+                end if;
+            end if;
+            printf "\n===================\n";
+        end if;
+    catch e;
+        printf "(# = %o): %o\n", i, e;
+        printf "\n===================\n";
+    end try;
+end for;
+
+printf "remaining bad:\n%o\n", remaining_bad_primes;

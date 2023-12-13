@@ -1,0 +1,141 @@
+//Distribution valued modular symbols 
+//------------------------------------------------------------------------
+
+
+intrinsic modsym_dist_total_measure(Phi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// modsym_dist_total_measure(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Returns Lk-valued modular symbol obtained by taking the 
+//	total measure of Phi
+//-------------------------------------------------------------------------}
+
+	d:=#ms_data(Phi);
+	answer := [dist_total_measure(ms_datum(Phi,j)) : j in [1..d]];
+	return(form_modsym(answer,ms_matdata(Phi)));
+end intrinsic;
+
+
+intrinsic modsym_dist_normalize(Phi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// modsym_dist_normalize(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol (integral coefficients)
+//
+// Output:
+//	Appropriately normalizes the values of Phi(D_i) for each i using
+//	the raw_dist_normalize() function.  (That is on a distribution it 
+//	reduces the i-th coefficient mod p^(M-i) where M is the number of 
+//	moments stored.)
+//-------------------------------------------------------------------------}
+
+	for d in [1..#ms_data(Phi)] do  
+		ms_alter_datum(~Phi,d,dist_normalize(ms_datum(Phi,d)));
+	end for;
+	
+	return Phi;
+end intrinsic;
+
+
+intrinsic modsym_dist_precision(Phi::ModularSymbolSpcElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// modsym_dist_precision(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Returns the precision of the distributions Phi(D_i).
+//-------------------------------------------------------------------------}
+
+   	return dist_precision(ms_datum(Phi,1));
+end intrinsic;
+
+intrinsic modsym_dist_weight(Phi::ModularSymbolSpcElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// modsym_dist_weight(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Returns the weight of the distributions Phi(D_i).
+//-------------------------------------------------------------------------}
+
+   	return dist_wt(ms_datum(Phi,1));
+end intrinsic;
+
+intrinsic modsym_dist_prime(Phi::ModularSymbolSpcElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// modsym_dist_prime(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Returns the characteristic of the residue field of the constant field of the distributions Phi(D_i).
+//-------------------------------------------------------------------------}
+
+   	return PrimeDivisors(AbsoluteNorm(dist_pfr(ms_datum(Phi,1))))[1];
+end intrinsic;
+
+intrinsic modsym_dist_prime_ideal(Phi::ModularSymbolSpcElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// modsym_dist_prime(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Returns the characteristic of the residue field of the constant field of the distributions Phi(D_i).
+//-------------------------------------------------------------------------}
+
+   	return dist_pfr(ms_datum(Phi,1));
+end intrinsic;
+
+
+intrinsic modsym_dist_adjust_precision(Phi::ModularSymbolSpcElt,M::RngIntElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// modsym_dist_adjust_precision(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Adjust the precision of Phi(D_i) for each i.
+//-------------------------------------------------------------------------}
+
+	for d in [1..#ms_data(Phi)] do
+		ms_alter_datum(~Phi,d,dist_adjust_precision(ms_datum(Phi,d),M));
+	end for;
+	return modsym_dist_normalize(Phi);
+end intrinsic;
+
+intrinsic modsym_dist_valuation(Phi::ModularSymbolSpcElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// modsym_dist_valuation(Phi)
+//
+// Input:
+//	Phi = distribution valued modular symbol
+//
+// Output:
+//	Returns the minimum valuation at p of all coefficient appearing in 
+//	Phi.
+//-------------------------------------------------------------------------}
+	M:=dist_precision(ms_datum(Phi,1));
+	min := M;
+	pfr := dist_pfr(ms_datum(Phi,1));
+	for d in [1..#ms_data(Phi)] do
+		for c in [0..M-1] do
+			min := Min(min, Valuation(Coefficient(dist_ps(ms_datum(Phi,d)),c),pfr));
+		end for;
+	end for;
+
+	return(min);
+end intrinsic;
+

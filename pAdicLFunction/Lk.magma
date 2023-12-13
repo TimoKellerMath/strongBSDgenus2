@@ -1,0 +1,153 @@
+//Formalism for the M_2(Z)-module of polynomials of degree
+//less than or equal to k.  The label for such elements is "Lk".
+//--------------------------------------------------------------
+//For a general discussion of M_2(Z)-modules see the file 
+//"M2_modules.magma".
+//--------------------------------------------------------------
+//Here an Lk-element is a polynomial (in T) of degree bounded by k
+//together with the number (weight) k.  (The weight is kept
+//to keep track of how matrices should act on this element).
+
+
+intrinsic form_Lk(f::RngElt,k::RngIntElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// form_Lk(f,k)
+//
+// Input:
+//	f = polynomial of degree less than or equal to k
+//	k = integer
+//
+// Output:
+//	Returns the Lk element representing f of weight k
+//-------------------------------------------------------------------------}
+	return form_m2_elt("Lk", [* f,k *]);
+end intrinsic;
+
+
+intrinsic Lk_weight(P::M2ZElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// Lk_weight(P)
+//
+// Input:
+//	P = Lk-elment
+//
+// Output:
+//	Returns the "weight" of the element.
+//-------------------------------------------------------------------------}
+	return P`info[2];
+end intrinsic;
+
+
+intrinsic Lk_poly(P::M2ZElt) -> RngUPolElt
+{//-------------------------------------------------------------------------
+// Lk_poly(P)
+//
+// Input:
+//	P = Lk-elment
+//
+// Output:
+//	Returns the polynomial stored in P.
+//-------------------------------------------------------------------------}
+	return P`info[1];
+end intrinsic;
+
+
+intrinsic Lk_add(P::M2ZElt,Q::M2ZElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// Lk_add(P,Q)
+//
+// Input:
+//	P = Lk-elment
+//	Q = Lk-elment  (of same weight as P)
+//
+// Output:
+//	P+Q (with same weight)
+//-------------------------------------------------------------------------}
+	error if Lk_weight(P) ne Lk_weight(Q), "error in Lk_add",P,Q; 
+	return form_Lk(Lk_poly(P)+Lk_poly(Q),Lk_weight(P));
+end intrinsic;
+
+
+intrinsic Lk_scale(c::RngElt,P::M2ZElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// Lk_scale(c,P)
+//
+// Input:
+//	c = scalar
+//	P = Lk-elment
+//
+// Output:
+//	c * P  (with same weight)
+//-------------------------------------------------------------------------}
+	return form_Lk(c*Lk_poly(P),Lk_weight(P));
+end intrinsic;
+
+
+intrinsic act_right_Lk(P::M2ZElt,gam::Mtrx) -> M2ZElt
+{//-------------------------------------------------------------------------
+// act_right_Lk(P,gam)
+//
+// Input:
+//	P = Lk-element
+//	gam = 2 by 2 matrix
+//
+// Output:
+//	P |_k gam  (i.e. the weight k right action of gam on P)
+//
+//	If gamma = [a,b;c,d] then
+//
+//			P |_k gam = (d-cT)^k * P((-b+aT)/(d-cT))
+//
+//	which is again a polynomial of degree at most k.
+//-------------------------------------------------------------------------
+//acts on the right by gam (matrix) with the Lk_weight(P) action}
+	k:=Lk_weight(P);
+	f:=Lk_poly(P);
+	T := Parent(f).1;
+	g:=0;
+	for j in [0..k] do 
+		g:=g + Coefficient(f,j)*(dd(gam)-cc(gam)*T)^(k-j)*(-bb(gam) + aa(gam)*T)^j;
+	end for;
+	return form_Lk(g,k);
+end intrinsic;
+
+
+intrinsic Lk_scale_by_p(Q::M2ZElt,p::RngIntElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// Lk_scale_by_p(Q,p)
+//
+// Input:
+//	Q = Lk-elment
+//	p = integer
+//
+// Output:
+//	Returns Q(T*p).
+//-------------------------------------------------------------------------}
+	k:=Lk_weight(Q);
+	f:=Lk_poly(Q);
+	T := Parent(f).1;
+	return form_Lk(Evaluate(f,T*p),k);
+end intrinsic;
+
+
+intrinsic Lk_valuation(Q::M2ZElt,p::RngIntElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// Lk_valuation(Q,p)
+//
+// Input:
+//	Q = Lk-elment
+//	p = prime
+//
+// Output:
+//	Returns the minimun of the valuation at p of the coefficients
+//	of Q(T).
+//-------------------------------------------------------------------------}
+	k:=Lk_weight(Q);
+	f:=Lk_poly(Q);
+	m:=Valuation(Coefficient(f,0),p);
+	for j in [1..k] do
+		m:=Min(m,Valuation(Coefficient(f,j),p));
+	end for;
+	
+	return m;
+end intrinsic;

@@ -1,0 +1,162 @@
+//Delta:=[ [* 1 , Matrix(2,2,[1,1,0,1])*],[* -1, Matrix(2,2,[1,0,0,1]) *] ];
+
+//-------------------------------------------------------------------------
+// eta(i,M)
+//
+// Input:
+//      i,M = integers
+//	BERNOULLI = precomputed list of Bernoulli #'s 
+//		    (BERNOULLI[i] = (i-1)-st Bernoulli #)
+//
+// Output:
+//	a distribution \eta_i (to precision M) with the property that
+//	
+//		\eta_i | Delta = (i+1) z^{-i-1} dz/z
+//
+//	(see section ? of ?)
+//-------------------------------------------------------------------------
+function eta(i,M,BERNOULLI,L)
+	R<w>:=LaurentSeriesRing(L, M);
+	answer:=O(w^M);
+	for j in [i..M-1] do
+		answer +:= Binomial(j,i) * BERNOULLI[j-i+1] * w^j;
+	end for;
+	return(answer);
+end function;
+
+//-------------------------------------------------------------------------
+// raw_solve_diff_eqn(nu)
+//
+// Input:
+//      nu = raw distribution
+//
+// Output:
+//	Returns the unique raw distribution \mu (with the same precision 
+//	as \nu) such that 
+//
+//		\mu | \Delta = \nu
+//
+//	Warning! May not have integral coefficients if precision >= p. 
+//-------------------------------------------------------------------------
+function raw_solve_diff_eqn(nu)
+	error if raw_dist_total_measure(nu) ne 0, "error in solve_diff_eqn";
+	M:=raw_dist_precision(nu);
+	BERNOULLI:=[BernoulliNumber(j) : j in [0..M]];
+	L := Parent(Coefficient(nu,1));
+	return &+[Coefficient(nu,m) * eta(m-1,M,BERNOULLI,L)/m : m in [1..raw_dist_precision(nu)-1]];
+end function;
+
+//-------------------------------------------------------------------------
+// solve_diff_eqn(nu)
+//
+// Input:
+//      nu = distribution
+//
+// Output:
+//      Returns the unique distribution \mu (with the same precision
+//      as \nu) such that
+//
+//              \mu | \Delta = \nu
+//
+//      Warning! May not have integral coefficients if precision >= p.
+//-------------------------------------------------------------------------
+function solve_diff_eqn(nu)
+	return form_dist(raw_solve_diff_eqn(dist_ps(nu)),dist_wt(nu),dist_pfr(nu));
+end function;
+
+//-------------------------------------------------------------------------
+// Lk_obvious_lift(P,M)
+//
+// Input:
+//      P = Lk-element
+//	M = integer
+//
+// Output:
+//      Returns the unique distribution \mu (with precision M) such that 
+//	\mu specializes to P and such that the coefficients a_i of \mu for 
+//	i>k are zero.
+//-------------------------------------------------------------------------
+function Lk_obvious_lift(P,M,pfr)
+	f:=0;
+	k:=Lk_weight(P);
+	R := CoefficientRing(Lk_poly(P));
+	RR<w>:=LaurentSeriesRing(R,M);
+
+	for j in [0..k] do
+		f +:= (-1)^(k-j) * Coefficient(Lk_poly(P),k-j) / Binomial(k,k-j) * w^j + O(w^M);
+	end for;
+	return form_dist(f,k,pfr);
+end function;
+
+
+intrinsic lift_modsym(phi::ModularSymbolSpcElt,N::RngIntElt,pfr::RngOrdIdl,M::RngIntElt,aplist::SeqEnum) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// lift_modsym(phi,M,aplist)
+//
+// Input:
+//	phi = Lk-valued (non-eisenstein) modular symbol
+//	N = level of phi
+//	M = integer (equal to precision of lift)
+//	aplist = list of a_p values for p = 2,..,13.
+//
+// Output:
+//	Returns a distribution valued modular symbol that specializes to phi.
+//	See section ? of ? for details.
+//
+//	WARNING: CURRENTLY CODED ONLY FOR WEIGHT 0 [TODO]
+//-------------------------------------------------------------------------}
+	k:=Lk_weight(ms_datum(phi,1));
+	require k eq 0: "Only implemented for k = 0 yet";
+	gam:=get_single_relation(ms_matdata(phi));
+
+	d:=#ms_data(phi);
+
+	data:=[];
+	for j in [2..d] do
+		Append(~data, Lk_obvious_lift(ms_datum(phi,j),M,pfr));
+	end for;
+
+	R := CoefficientRing(Lk_poly(ms_datum(phi,1)));
+	nu:=form_dist(Zero(LaurentSeriesRing(R,M)),k,pfr);
+	for j in [1..d-1] do   
+		if #gam[j+1] eq 2 then
+			temp := subtract(act_right(data[j],gam[j+1][1]^(-1)),act_right(data[j],gam[j+1][2]^(-1)));
+			nu := add(nu,temp);
+		else
+			temp := act_right(data[j],gam[j+1][1]^(-1));
+			nu := add(nu,temp);
+		end if;
+	end for;
+
+	vprintf pAdicLFunction, 2: "lift_modsym: solving difference equation ...\n";
+	mu:=solve_diff_eqn(nu);
+	data:=[mu] cat data;
+
+	Phi:=form_modsym(data,ms_matdata(phi));
+
+	vprintf pAdicLFunction, 2: "lift_modsym: killing Eisenstein part ...\n";
+	p := PrimeDivisors(AbsoluteNorm(pfr))[1];
+	primes := PrimesUpTo(NthPrime(#aplist));
+	r:=1;
+	found_prime:=false;
+	while (r le #primes) and (not found_prime) do
+		el:=primes[r]; 
+		if (el ne p) and (N mod el ne 0) then 
+			a_el:=aplist[r];
+			if a_el ne (el+1) then
+				found_prime := true;
+				break;
+			end if;
+		end if;
+		r:=r+1;
+	end while;
+	if not found_prime then
+		error "lift_modsym: couldn't find ell not dividing N and a_ell ne ell+1";
+	end if;
+
+	vprintf pAdicLFunction, 2: "lift_modsym: killing Eisenstein part of lift with ell = %o, a_ell = %o ...\n", el, a_el;
+	time Phi:=subtract(Tl_modsym(Phi, el), scale(el+1, Phi));
+	Phi:=scale((a_el - el - 1)^(-1), Phi);
+
+	return Phi;
+end intrinsic;

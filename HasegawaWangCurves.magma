@@ -1,0 +1,71 @@
+SetLogFile("HasegawaWangCurves.log");
+
+SetDebugOnError(true);
+
+load "verifyBSD.magma";
+load "LMFDB-curves.magma";
+
+// The Hasegawa curves from the six-authors paper
+// P := PolynomialRing(Rationals()); // defined in "LMFDB-curves.magma"
+
+Hasegawa_curves_with_labels := [
+<23, P![-2, 2, -3, 0, 0, -2], P![1, 1, 0, 1], "23.2.a.a">, // not isomorphic to LMFDB curve
+<29, P![-2, 2, 2, 0, -3, -1], P![1, 0, 0, 1], "29.2.a.a">, // not isomorphic to LMFDB curve
+<31, P![-3, 2, 3, -5, -5, -1], P![1, 0, 1, 1], "31.2.a.a">,
+<35, P![-19, -16, -7, -8, 0, -1], P![0, 1, 0, 1], "35.2.a.b">, // not isomorphic to LMFDB curve
+<39, P![2, -12, 16, -2, -5], P![1, 0, 0, 1], "39.2.a.b">, // not isomorphic to LMFDB curve
+<67, P![0, -1, 0, 0, 0, 1], P![1, 1, 0, 1], "67.2.a.b">,
+<73, P![0, 1, 0, -2, 0, -1], P![1, 0, 1, 1], "73.2.a.b">,
+<85, P![1, -2, 3, 1, 1], P![0, 1, 1, 1], "85.2.a.b">, // not isomorphic to LMFDB curve
+<87, P![-1, 1, -3, 1, -1], P![1, 1, 0, 1], "87.2.a.a">,
+<93, P![0, 0, 0, 1, 1, -2], P![1, 0, 1, 1], "93.2.a.a">,
+<103, P![0, 0, 0, 0, 1, 1], P![1, 0, 1, 1], "103.2.a.a">,
+<107, P![-1, -1, -1, 0, 1], P![1, 0, 1, 1], "107.2.a.a">,
+<115, P![0, 1, 1, 2], P![1, 1, 0,1], "115.2.a.b">,
+<125, P![-1, -1, 1, 2, 2, 1], P![1, 1, 0, 1], "125.2.a.a">,
+<133, P![0, -2, 2, -2, 1, -1], P![1, 0, 1, 1], "133.2.a.a">,
+<147, P![1, 0, 1, 1, 2, 1], P![0, 1, 1, 1], "147.2.a.d">,
+<161, P![1, 4, 4, 1], P![1, 1, 0, 1], "161.2.a.b">, // not isogenous to LMFDB curve
+<165, P![0, -3, 1, 3, 2, 1], P![0, 1, 1, 1], "165.2.a.a">, // not isomorphic to LMFDB curve
+<167, P![-1, 0, -1, -1, 0, -1], P![1, 1, 0, 1], "167.2.a.a">,
+<177, P![0, 0, 0, 1, 1, 1], P![1, 0, 1, 1], "177.2.a.b">,
+<191, P![0, 1, 1, -1], P![1, 1, 0, 1], "191.2.a.a">,
+// not in six-authors paper
+<205, P![0, -2, 1, 2], P![-1, -1, 0, -1], "205.2.a.e">,
+<209, P![1, 1, 2, -2, 2, -1], P![0, 0, 0, -1], "209.2.a.b">,
+<213, P![-1, 1, -2], P![-1, -1, 0, -1], "213.2.a.c">,
+<221, P![0, -1, 0, 1, 0, 1], P![-1, -1, 0, -1], "221.2.a.c">,
+<287, P![-2, 3, -4, 1, 0, -1], P![-1, -1, 0, -1], "287.2.a.b">,
+<299, P![-1, -3, -2, 1, 1, -1], P![-1, -1, 0, -1], "299.2.a.d">,
+<357, P![3, -3, 5, -2, 2], P![0, 0, 0, -1], "357.2.a.f">
+];
+
+// The Wang only curves
+Wang_curves_with_labels := [
+<65, P![-10, 0, 18, 7, 9, 0, -4], P![1, 0, 0, 1], "65.2.a.b">, // not isogenous to LMFDB curve
+<65, P![-1, 6, 40, 20, -32, 10, -1], P![], "65.2.a.c">, // not isomorphic to LMFDB curve
+<117, P![-7, -9, -12, -5, -3, 0, -1], P![1, 0, 0, 1], "117.2.a.c">, // not isogenous to LMFDB curve
+<125, P![-4, -3, 6, 12, 12, 5, 1], P![1, 1, 0, 1], "125.2.a.b">, // not isogenous to LMFDB curve
+<133, P![7, 18, 2, -19, -2, 7, -2], P![1, 1, 0, 1], "133.2.a.c">,
+<135, P![-3, -8, 2, -3, 1], P![1, 1, 0, 1], "135.2.a.d">, // not isomorphic to LMFDB curve
+<175, P![-1, -2, -4, -2, -1, -1], P![1, 0, 1, 1], "175.2.a.e">, // not isogenous to LMFDB curve
+<188, P![1, -2, 1, 1, -1, 1], P![], "188.2.a.a">
+];
+
+for i -> NC in Hasegawa_curves_with_labels cat Wang_curves_with_labels do
+    N := NC[1];
+    C := SimplifiedModel(HyperellipticCurve(NC[2], NC[3]));
+    if exists{e : e in LMFDB_curves | e[1] eq N and IsIsomorphic(C, HyperellipticCurve(e[2], e[3]))} then
+        printf "Curve #%o associated to newform %o is in the LMFDB\n", i, NC[4];
+    elif i eq 4 then
+        printf "Omitting curve #%o for newform %o (isogenous to curve in LMFDB)\n", i, NC[4];
+    else
+      try
+          printf "%o:\n", NC[4];
+          flag := verifyBSD(C, N);
+      catch e
+          printf "error for #%o: %o\n", i, e;
+      end try;
+    end if;
+    printf "\n";
+end for;

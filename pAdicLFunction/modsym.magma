@@ -1,0 +1,727 @@
+//Modular symbol formalism
+//-----------------------------------------------------------------------
+//Let \Gamma = \Gamma_0(N).  Let V be some M_2(Z)-module (or possibly a
+//smaller matrix group).
+//
+//A V-valued modular symbol is an M_2-element with label "modsym".
+//Its data is a 2-ple made of:
+//	1 - list of elements of V corresponding to the value of \phi on a 
+//	    generating set of divisors (see point 5 below)
+//	2 - a 7-tuple of information about the Manin relations
+//		1 - rowreduced matrix of relations
+//			(the columns are in 1-1 correspondence with P^1(Z/NZ))
+//		2 - reordered list of columns
+//		     	(a list v s.t. the j-th column corresponds to the 
+//				v[j]-th element of P^1(Z/NZ))
+// 		3 - reversed reordered list of columns
+//			(a list w s.t. the w[j]-th column corresponds to the 
+//				j-th element of P^1(Z/NZ))		
+//		4 - chosen generators
+//			(a list v s.t. v[j] = 0 if the j-th element of #P^1(Z/NZ) 
+//			 does not correspond to a generator in our rowreduced matrix.
+//			 Else, v[j] = m if the j-th column is the m-th chosen generator.)
+//		5 - list of generators
+//			(a list v s.t. the v[j]-th element of P^1(Z/NZ) is our j-th 
+//			 chosen generator.)
+//
+//			Note that this list tells which divisors \phi is determined on.
+//			To do this, apply our chosen section to the v[j]-th element
+//			of P^1(Z/NZ) and take the corresponding divisor (i.e. the
+//			matrix [a,b;c,d] corresponds to {a/b}-{c/d}).  If this divisor
+//			is D_j then \phi is determined by its values \phi(D_1), 
+//			\phi(D_2), ... \phi(D_t).
+//
+//		6 - P^1(Z/NZ)
+//		7 - section of map SL_2(Z) --> P^1(Z/NZ); [a,b;c,d] --> [c,d]
+//			(this section is a choice of right coset reps for
+//			 \Gamma \ SL_2(Z).)
+
+declare type ModularSymbolSpcElt: M2ZElt;
+declare attributes ModularSymbolSpcElt: V, info, mat;
+
+
+intrinsic form_modsym(info::SeqEnum,mat::List) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// form_modsym(info,math)
+//
+// Input:
+//      info = list of M_2-elements representing v_1, v_2, ... , v_t
+//	mat = manin relations information as explained above
+//
+// Output:
+//      The unique modular symbol \phi s.t. \phi(D_i) = v_i 
+//		(as explained in point 5 above and see section ? of ?)
+//-------------------------------------------------------------------------}
+	modsym := New(ModularSymbolSpcElt);
+	if #info ne 0 then
+		modsym`V := Parent(info[1]);
+	end if;
+	modsym`info := info;
+	modsym`mat := mat;
+	return modsym;
+end intrinsic;
+
+
+intrinsic ms_data(phi::ModularSymbolSpcElt) -> SeqEnum
+{//-------------------------------------------------------------------------
+// ms_data(phi)
+//
+// Input:
+//	phi = modular symbol
+//
+// Output:
+//      list of values of phi on D_1, D_2, ... D_t
+//-------------------------------------------------------------------------}
+	return phi`info;
+end intrinsic;
+
+
+intrinsic ms_datum(phi::ModularSymbolSpcElt,j::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// ms_datum(phi,j)
+//
+// Input:
+//	phi = modular symbol
+//	j = integer
+//
+// Output:
+//      Returns phi(D_j)
+//-------------------------------------------------------------------------
+//phi = modular symbol
+//
+//returns the list of values of phi}
+
+	return phi`info[j];
+end intrinsic;
+
+
+intrinsic ms_alter_datum(~phi::ModularSymbolSpcElt,j::RngIntElt,new_datum::Any)
+{//-------------------------------------------------------------------------
+// ms_alter_datum(~phi,j,new_datum)
+//
+// Input:
+//	phi = modular symbol
+//	j = integer
+//	new_datum = M_2-element
+//
+// Output:
+//      Alters the value of phi(D_i) to new_datum
+//-------------------------------------------------------------------------}
+
+	phi`info[j]:=new_datum;
+end intrinsic;
+
+
+intrinsic ms_matdata(phi::ModularSymbolSpcElt) -> List
+{//-------------------------------------------------------------------------
+// ms_matdata(phi)
+//
+// Input:
+//	phi = modular symbol
+//
+// Output:
+//      Returns all information of solved manin relations
+//-------------------------------------------------------------------------}
+
+	return phi`mat;
+end intrinsic;
+
+
+intrinsic ms_matdatum(phi::ModularSymbolSpcElt,r::RngIntElt,c::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// ms_matdatum(phi,r,c)
+//
+// Input:
+//	phi = modular symbol
+//	r,c = integers
+//
+// Output:
+//      Returns (r,c)-entry of matrix of row reduced manin relations
+//-------------------------------------------------------------------------}
+
+	return(phi`mat[1][r,c]);
+end intrinsic;
+
+
+intrinsic ms_revlist(phi::ModularSymbolSpcElt,d::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// ms_revlist(phi,d)
+//
+// Input:
+//	phi = modular symbol
+//	d = integer
+//
+// Output:
+//      Returns the d-th element of the third piece of matrix information
+//-------------------------------------------------------------------------}
+
+	return(phi`mat[3][d]);
+end intrinsic;
+
+
+intrinsic ms_genlist(phi::ModularSymbolSpcElt,d::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// ms_genlist(phi,d)
+//
+// Input:
+//	phi = modular symbol
+//	d = integer
+//
+// Output:
+//      Returns d-th element of the fourth piece of matrix information
+//-------------------------------------------------------------------------}
+
+	return(phi`mat[4][d]);
+end intrinsic;
+
+
+intrinsic ms_indexgen(phi::ModularSymbolSpcElt,d::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// ms_datum(phi,d)
+//
+// Input:
+//	phi = modular symbol
+//	d = integer
+//
+// Output:
+//      Returns d-th element of the fifth piece of matrix information
+//-------------------------------------------------------------------------}
+
+	return(phi`mat[5][d]);
+end intrinsic;
+
+
+intrinsic ms_numfreegen(phi::ModularSymbolSpcElt) -> RngIntElt
+{//-------------------------------------------------------------------------
+// ms_datum(phi)
+//
+// Input:
+//	phi = modular symbol
+//
+// Output:
+//      Returns the number of divisors used to store phi
+//-------------------------------------------------------------------------}
+	return(#phi`mat[5]);
+end intrinsic;
+
+
+intrinsic ms_p1(phi::ModularSymbolSpcElt) -> Any
+{//-------------------------------------------------------------------------
+// ms_p1(phi)
+//
+// Input:
+//	phi = modular symbol
+//
+// Output:
+//      Returns the P^1(Z/NZ) stored in phi
+//-------------------------------------------------------------------------}
+
+	return(phi`mat[6]);
+end intrinsic;
+
+
+intrinsic ms_section(phi::ModularSymbolSpcElt,j::RngIntElt) -> Mtrx
+{//-------------------------------------------------------------------------
+// ms_section(phi,j)
+//
+// Input:
+//	phi = modular symbol
+//	j = integer
+//
+// Output:
+//      Returns the matrix corresponding to the j-th element of P^1
+//	(i.e. the j-th chosen right coset rep of \Gamma \ SL_2(Z) )
+//-------------------------------------------------------------------------}
+
+	return(phi`mat[7][j]);
+end intrinsic;
+
+
+intrinsic eval_modsym_gen(phi::ModularSymbolSpcElt,j::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// eval_modsym_gen(phi,j)
+//
+// Input:
+//	phi = modular symbol
+//	j = integer
+//
+// Output:
+//      Returns phi(D_j).  (Here D_j is the divisor attached to
+//				 ms_section(phi,j)).)
+//-------------------------------------------------------------------------}
+	d := ms_numfreegen(phi);
+	s := p1_size(ms_p1(phi));
+	if ms_genlist(phi,j) ne 0 then
+		return(ms_datum(phi,ms_genlist(phi,j)));  //uses part of the data of phi
+	else
+		answer := zero(ms_datum(phi,1));
+		g := ms_revlist(phi,j);
+		for k in [1..d] do 
+			answer:=add(answer,act_right_grp_alg(ms_datum(phi,k),
+					   			Involution(ms_matdatum(phi,g,s-d+k))));
+		end for;
+		return(scale(-1,answer));
+	end if;
+end intrinsic;
+
+
+intrinsic eval_modsym_gen_quick(phi::ModularSymbolSpcElt,j::RngIntElt,ACT_gen::List,INDEX_gen::SeqEnum) -> Any
+{//-------------------------------------------------------------------------
+// eval_modsym_gen_quick(phi,j,ACT_gen,INDEX_gen)
+//
+// Input:
+//	phi = modular symbol
+//	j = integer
+//	ACT_gen,INDEX_gen = precomputed data to speed the computation
+//			    of the action
+//
+// Output:
+//      Returns phi(D_j).  (Here D_j is the divisor attached to
+//				 ms_section(phi,j)).)
+//-------------------------------------------------------------------------}
+	d := ms_numfreegen(phi);
+	s := p1_size(ms_p1(phi));
+	if ms_genlist(phi,j) ne 0 then  // \gamma_j is a minimal generator
+		return(ms_datum(phi,ms_genlist(phi,j)));  //uses part of the data of phi
+	else
+		answer := zero(ms_datum(phi,1));
+		g := ms_revlist(phi,j);
+		for k in [1..d] do 
+			answer:=add(answer,act_right_grp_alg_quick(ms_datum(phi,k),
+					   			Involution(ms_matdatum(phi,g,s-d+k)),ACT_gen,INDEX_gen));
+		end for;
+		return(scale(-1,answer));
+	end if;
+end intrinsic;
+
+//-------------------------------------------------------------------------
+// contfrac(rat)
+//
+// Input:
+//	rat = rational #
+//
+// Output:
+//      Returns sequence of partial quotients in continued fraction
+//	expansion of rat.
+//-------------------------------------------------------------------------
+function contfrac(rat)
+	a:=Numerator(rat);
+	b:=Denominator(rat);
+	answer:=[];
+	while (b ne 0) do
+		answer := answer cat [a div b];
+		temp:=b;
+		b:=a mod b;
+		a:=temp;
+	end while;
+	return(answer);
+end function;
+
+//-------------------------------------------------------------------------
+// generate_pn(A)
+//
+// Input:
+//	A = list of integers = [a_1, ... a_n]
+//
+// Output:
+//      Returns [p_1,...,p_n] where p_k = a_k p_{k-1} + p_{k-2}
+//				and p_0 =0 , p_1 =1.
+//-------------------------------------------------------------------------
+function generate_pn(A)
+	P:=[x : x in [1..#A]];
+	if #A eq 1 then
+		P:=[A[1]];
+	else
+		P[1]:=A[1];
+		P[2]:=A[2]*P[1]+1;
+		for k in [3..#A] do
+			P[k]:=A[k]*P[k-1]+P[k-2];
+		end for;
+	end if;
+	return(P);
+end function;
+
+//-------------------------------------------------------------------------
+// generate_qn(A)
+//
+// Input:
+//	A = list of integers = [a_1, ... a_n]
+//
+// Output:
+//      Returns [q_1,...,q_n] where q_k = a_k q_{k-1} + q_{k-2}
+//				and q_0 = 1 , q_1 = 0.
+//-------------------------------------------------------------------------
+function generate_qn(A)
+	Q:=[0 : x in [1..#A]];
+	if #A eq 1 then
+		Q:=[1];
+	else
+		Q[1]:=1;
+		Q[2]:=A[2];
+		for k in [3..#A] do
+			Q[k]:=A[k]*Q[k-1]+Q[k-2];
+		end for;
+	end if;
+	return(Q);
+end function;
+
+
+intrinsic list_of_unimodpath(v::SeqEnum) -> SeqEnum
+{//-------------------------------------------------------------------------
+// list_of_unimodpath(v)
+//
+// Input:
+//	v = path = {r,s}
+//
+// Output:
+//      Returns a list of matrices in SL_2(Z) such that there corresponding
+//	paths (nec. unimodular) connect v to infinity.
+//-------------------------------------------------------------------------}
+	if v eq [1,0] then
+		return [];
+	else
+		A:=contfrac(v[1]/v[2]);
+		P:=generate_pn(A);
+		Q:=generate_qn(A);
+		temp:=[matrix(2,2) : x in [1..#A]];
+		temp[1]:=Matrix(2,2,[1,P[1],0,Q[1]]);
+		for k in [1..#A-1] do
+			temp[k+1]:=Matrix(2,2,[P[k],(-1)^(k)*P[k+1],Q[k],(-1)^k*Q[k+1]]);
+		end for;
+	end if;
+	return(temp);
+end intrinsic;
+
+
+//-------------------------------------------------------------------------
+// eval_modsym_unimodpath(phi,gam)
+//
+// Input:
+//	phi = modular symbol
+//	gam = matrix in SL_2(Z)
+//
+// Output:
+//      Returns phi({a/b}-{c/d}) where gam = [a,b;c,d].
+//-------------------------------------------------------------------------
+function eval_modsym_unimodpath(phi,gam)
+	j:=p1_index([cc(gam),dd(gam)],ms_p1(phi));
+	S:=gam*ms_section(phi,j)^(-1);
+	mu:=eval_modsym_gen(phi,j);
+	mu:=act_right(mu,S^(-1));
+
+	return mu;
+end function;
+
+//-------------------------------------------------------------------------
+// eval_modsym_pt(phi,v)
+//
+// Input:
+//	phi = modular symbol
+//	v = element of P^1(Q)
+//
+// Output:
+//      Returns phi(v - {\infty}) (using Manin's continued fraction method)
+//-------------------------------------------------------------------------
+function eval_modsym_pt(phi,v)
+	answer := zero(ms_datum(phi,1));
+	if v[2] eq 0 then
+		return(answer);
+	else
+        temp:=list_of_unimodpath(v);
+        for i in [1..#temp] do
+            answer:=add(answer,eval_modsym_unimodpath(phi,temp[i]));
+		end for;
+		return(answer);
+	end if;	
+end function;
+
+
+intrinsic eval_modsym(phi::ModularSymbolSpcElt,D::List) -> Any
+{//-------------------------------------------------------------------------
+// eval_modsym(phi,D)
+//
+// Input:
+//	phi = modular symbol
+//	D = divisor
+//
+// Output:
+//      Returns phi(D) 
+//-------------------------------------------------------------------------}
+	answer := zero(ms_datum(phi,1));
+	for k in [1..#D] do
+		answer:=add(answer,scale(mult(D,k),eval_modsym_pt(phi,point(D,k))));
+	end for;
+	return(answer);
+end intrinsic;
+
+
+intrinsic eval_modsym_twist(phi::ModularSymbolSpcElt,D::List,d::RngIntElt) -> Any
+{//-------------------------------------------------------------------------
+// eval_modsym_twist(phi,D,d)
+//
+// Input:
+//	phi = modular symbol
+//	D = divisor
+//	d = fundamental discriminant
+//
+// Output:
+//      Returns phi twisted by quadratic character of discrimant d 
+//	evaluated at D.
+//-------------------------------------------------------------------------
+// TODO: arbitrary Dirichlet character}
+	error if (d ne 1) and (not IsFundamentalDiscriminant(d)), "Not good discriminant";
+	
+	answer := zero(ms_datum(phi,1));
+	data := [];
+	for y in [1..AbsoluteValue(d)] do 
+		if Gcd(y,d) eq 1 then 	
+			temp := scale(KroneckerSymbol(d,y),
+                            act_right(eval_modsym(phi,act_left_divisor(Matrix(2,2,[1,y,0,AbsoluteValue(d)]),D)),
+                                Matrix(2,2,[1,y,0,AbsoluteValue(d)]))); 
+			data := data cat [temp];
+			answer:=add(answer,temp);
+		end if;
+	end for;
+	
+	return answer;
+end intrinsic;
+
+
+intrinsic modsym_add(phi::ModularSymbolSpcElt,psi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// modsym_add(phi,psi)
+//
+// Input:
+//	phi,psi = modular symbols
+//
+// Output:
+//	phi + psi
+//-------------------------------------------------------------------------}
+	data := [add(ms_datum(phi,d),ms_datum(psi,d)) : d in [1..#ms_data(phi)]];
+	return form_modsym(data,ms_matdata(phi));
+end intrinsic;
+
+
+intrinsic modsym_scale(alpha::RngElt,phi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// modsym_scale(alpha,phi)
+//
+// Input:
+//	alpha = scalar
+//	phi = modular symbols
+//
+// Output:
+//	alpha * phi
+//-------------------------------------------------------------------------}
+	data := [scale(alpha,ms_datum(phi,d)) : d in [1..#ms_data(phi)]];
+	return form_modsym(data,ms_matdata(phi));
+end intrinsic;
+
+
+intrinsic modsym_subtract(phi::ModularSymbolSpcElt,psi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// modsym_subtract(phi,psi)
+//
+// Input:
+//	phi,psi = modular symbols
+//
+// Output:
+//	phi - psi
+//-------------------------------------------------------------------------}
+	return modsym_add(phi,modsym_scale(-1,psi));
+end intrinsic;
+
+
+intrinsic act_right_modsym(phi::ModularSymbolSpcElt,A::Mtrx) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// act_right_modsym(phi,A)
+//
+// Input:
+//	phi = modular symbols
+//	A = 2 by 2 matrix
+//
+// Output:
+//	phi | A
+//-------------------------------------------------------------------------}
+	list:=[];
+	for j in [1..ms_numfreegen(phi)] do 
+		gam:=ms_section(phi,ms_indexgen(phi,j));
+		D:=matrix_to_divisor(A*gam);
+		answer:=act_right(eval_modsym(phi,D),A);
+		list := Append(list,answer);
+	end for;
+	return form_modsym(list,ms_matdata(phi));
+end intrinsic;
+
+
+intrinsic pstabilize(phi::ModularSymbolSpcElt,alpha::RngElt,p::RngIntElt,W::List) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// pstabilize(phi,alpha,W)
+//
+// Input:
+//	phi = modular symbol of level N
+//	alpha = root of x^2 - a_p x + p^(k+1)
+//	W = matrix data of level Np
+//
+//Output:
+//	Returns the p-stabilization of phi to level Np (i.e. the unique 
+//	symbol phi_alpha s.t. phi_alpha | U_p = alpha phi_alpha)
+//-------------------------------------------------------------------------}
+
+	list:=[];
+    for j in [1..#W[5]] do
+        dat:=matrix_to_divisor(W[7][W[5][j]]);
+		dat2:=dat;
+		dat2[1][1][1]:=dat2[1][1][1]*p;
+		dat2[2][1][1]:=dat2[2][1][1]*p;
+		a:=eval_modsym(phi,dat);
+		b:=eval_modsym(phi,dat2);
+        list cat:= [subtract(scale(alpha, a), b)]; // f_alpha(z) = f(z) - beta f(pz)
+    end for;
+
+    return(form_modsym(list,W));	
+end intrinsic;
+
+
+intrinsic plus_part_modsym(phi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// plus_part_modsym(phi)
+//
+// Input:
+//	phi = modular symbols
+//	A = 2 by 2 matrix
+//
+// Output:
+//	Returns the plus-part of phi.  (i.e. 1/2 (phi | ( 1 + [-1,0;0,1])))
+//-------------------------------------------------------------------------}
+
+	return modsym_scale(1/2,modsym_add(phi,act_right_modsym(phi,Matrix(2,2,[-1,0,0,1]))));
+end intrinsic;
+
+
+intrinsic minus_part_modsym(phi::ModularSymbolSpcElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// minus_part_modsym(phi)
+//
+// Input:
+//	phi = modular symbols
+//
+// Output:
+//	Returns the minus-part of phi.  (i.e. 1/2 (phi | ( 1 - [-1,0;0,1])))
+//-------------------------------------------------------------------------}
+
+	return modsym_scale(1/2,modsym_subtract(phi,act_right_modsym(phi,Matrix(2,2,[-1,0,0,1]))));
+end intrinsic;
+
+function modularpath(MS,P,r)
+    return((MS!<P,[Cusps()|Infinity(),r]>)`element);
+end function;
+
+//-------------------------------------------------------------------------
+// form_modsymspace(N,k,aplist)
+//
+// Input:
+//	N = level
+//	k = weight
+//	aplist = list of fourier coefficients = [a_2,a_3,a_5,...]
+//
+// Output:
+//	2-tple [M_plus,M_minus] where M_plus is the (1-diml) space of
+//	plus modular symbols where Hecke acts by aplist and M_minus is
+//	the same in the minus subspace.
+//-------------------------------------------------------------------------
+function form_modsymspace(N,k,aplist,L)
+    R<x>:=PolynomialRing(L);
+    M1:=ModularSymbols(N,k,L,+1);
+    M2:=ModularSymbols(N,k,L,-1);
+	primes := PrimesUpTo(NthPrime(#aplist));
+	I := [<primes[r], x - aplist[r]> : r in [1..#aplist]];
+    
+    V1:=Kernel(I,M1);
+    error if Dimension(V1) ne 1, "ModularSymbol plus space has dimension", Dimension(V1), "ne 1";
+    V2:=Kernel(I,M2);
+    error if Dimension(V2) ne 1, "ModularSymbol minus space has dimension", Dimension(V2), "ne 1";
+    W1:=DualVectorSpace(V1);
+    W2:=DualVectorSpace(V2);
+    return [* V1, W1.1, V2, W2.1 *];
+end function;
+
+intrinsic create_modsym_from_fourier(N::RngIntElt,k::RngIntElt,aplist::SeqEnum,
+		L::Fld,W::List,sign::RngIntElt : Conj := 1, f := 0, p := 0, pAdic_prec := 7) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// create_modsym_from_fourier(N,k,aplist,W,eps)
+//
+// Input:
+//	N = level
+//	k = weight
+//	(aplist = list of fourier coefficients = [a_2,a_3,a_5,...])
+//  f = newform
+//	W = matrix data of manin relations (from solve_manin_relations())
+//	eps = 1 or -1 indicating the sign
+//
+// Output:
+//	Returns the (hopefully unique) modular symbol of level N, weight k,
+//	in the eps-part where Hecke acts by aplist.
+//-------------------------------------------------------------------------}
+
+	mfdata:=form_modsymspace(N,k+2,aplist,L);
+
+	require sign eq +1: "sign must be +1";
+	if sign eq +1 then
+		MS:=mfdata[1];
+	else
+		MS:=mfdata[3];
+	end if;
+
+	S<T>:=PolynomialRing(L);
+	RRR<X,Y>:=PolynomialRing(L,2);
+    list:=[];
+	require k eq 0: "only implemented for weight k = 2 yet.";
+    for j in [1..#W[5]] do
+        dat:=matrix_to_divisor(W[7][W[5][j]]);
+        if dat[1][1][2] ne 0 then 	//i.e. not equal to infinity
+			a:=0;
+			for m in [0..k] do
+				r:=dat[1][1][1]/dat[1][1][2];
+				//a := EvaluateModularSymbol(f, r, p : pAdic_prec := pAdic_prec)[Conj] * T^m;
+				a := EvaluateModularSymbol(f, r)[Conj] * T^m;
+			end for;
+        else
+            a:=0;
+        end if;
+        if dat[2][1][2] ne 0 then  //i.e. not equal to infinity
+			b:=0;
+			for m in [0..k] do
+				s:=dat[2][1][1]/dat[2][1][2];
+				//b := EvaluateModularSymbol(f, s, p : pAdic_prec := pAdic_prec)[Conj] * T^m;
+				b := EvaluateModularSymbol(f, s)[Conj] * T^m;
+			end for;
+        else
+            b:=0;
+        end if;
+        list cat:= [form_Lk(a-b,k)];
+    end for;
+    return(form_modsym(list,W));
+end intrinsic;
+
+//-------------------------------------------------------------------------
+// modsym_triv_degen(phi,W)
+//
+// Input:
+//	phi = modular symbol of level N
+//	W = matrix data of level Np
+//
+//Output:
+//	Returns the modular symbol equal to phi but thought of as level Np.
+//-------------------------------------------------------------------------
+function modsym_triv_degen(phi,W)
+	list:=[];
+    for j in [1..#W[5]] do
+        dat:=matrix_to_divisor(W[7][W[5][j]]);
+		a:=eval_modsym(phi,dat);
+        list cat:= [a];
+    end for;
+
+	return form_modsym(list,W);
+end function;
+

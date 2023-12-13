@@ -1,0 +1,35 @@
+load "verifyBSD.magma";
+
+load "database.magma";
+load "parse_group.magma";
+
+SetLogFile("LMFDBexamples.log");
+
+SetDebugOnError(true);
+
+newDB := [];
+
+create_database := true;
+
+if create_database then
+    database_file := Open("database_y_K_JK.magma", "w");
+end if;
+
+for i -> Cf in DB do
+  if i eq 3 then // curve #3 (N = 31) takes a very long time, but we have 3 other curves with the same newform
+    continue;
+  end if;
+  N := Cf`N;
+  C := Cf`C;
+  L_rank := Cf`L_rank;
+  printf "N = %o (#%o) of L-rank %o:\n", N, i, L_rank;
+  flag, Crec := verifyBSD(C, N : index := i);
+  if flag then
+    Append(~newDB, Crec);
+    if create_database then
+        print_DB_instructions(Crec, i, database_file);
+        print_DB_JKgens(Crec, i, database_file);
+    end if;
+  end if;
+  printf "\n";
+end for;

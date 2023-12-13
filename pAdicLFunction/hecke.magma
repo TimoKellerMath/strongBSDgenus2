@@ -1,0 +1,480 @@
+intrinsic Up_modsym(phi::ModularSymbolSpcElt,p::RngIntElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// Up_modsym(phi,p)
+//
+// Input:
+//      phi = modular symbol
+//	p = prime
+//
+// Output:
+//      phi | U_p
+//-------------------------------------------------------------------------}
+	list:=[];
+	for k in [1..ms_numfreegen(phi)] do 
+		gam:=ms_section(phi,ms_indexgen(phi,k));
+		answer:=zero(ms_datum(phi,1));
+		for a in [0..p-1] do 
+			ga:=Matrix(2,2,[1,a,0,p]);
+			D:=matrix_to_divisor(ga*gam);
+			mu:=eval_modsym(phi,D);
+			mu:=act_right(mu,ga);
+			answer:=add(answer,mu);
+		end for;
+		list cat:= [answer];
+	end for;
+	return(form_modsym(list,ms_matdata(phi)));
+end intrinsic;
+
+
+intrinsic Up_modsym_dist(phi::ModularSymbolSpcElt,p::RngIntElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// Up_modsym_dist(phi,p)
+//
+// Input:
+//      phi = modular symbol taking distributions with integral moments
+//		as values
+//	p = prime
+//
+// Output:
+//      phi | U_p  (with coefficients reduced mod the appropriate power of p)
+//-------------------------------------------------------------------------}
+
+	list:=[];
+	t:=Cputime();
+	for k in [1..ms_numfreegen(phi)] do
+		print " up to generator #",k;
+		gam:=ms_section(phi,ms_indexgen(phi,k));
+		answer:=zero(ms_datum(phi,1));
+		for a in [0..p-1] do 
+			ga:=Matrix(2,2,[1,a,0,p]);
+			D:=matrix_to_divisor(ga*gam);
+			mu:=eval_modsym(phi,D);
+			mu:=act_right_dist(mu,ga);
+			answer:=add(answer,mu);
+		end for;
+		list cat:= [answer];
+	end for;
+	return(modsym_dist_normalize(form_modsym(list,ms_matdata(phi))));
+end intrinsic;
+
+
+intrinsic Tl_modsym(Phi::ModularSymbolSpcElt,el::RngIntElt) -> ModularSymbolSpcElt
+{//-------------------------------------------------------------------------
+// Tl_modsym(Phi,el)
+//
+// Input:
+//      phi = modular symbol
+//	el = prime that doesn't divide the level of phi
+//
+// Output:
+//      phi | T_el
+//-------------------------------------------------------------------------}
+
+	list:=[];
+
+	for k in [1..ms_numfreegen(Phi)] do 
+		gam:=ms_section(Phi,ms_indexgen(Phi,k));
+		answer:=zero(ms_datum(Phi,1));
+		for a in [0..el-1] do
+			ga:=Matrix(2,2,[1,a,0,el]);
+			D:=matrix_to_divisor(ga*gam);	
+			answer:=add(answer,act_right(eval_modsym(Phi,D),ga));
+		end for;
+		g:=Matrix(2,2,[el,0,0,1]);
+		D:=matrix_to_divisor(g*gam);
+		answer:=add(answer,act_right(eval_modsym(Phi,D),g));
+		list := list cat [answer];
+	end for;
+	return(form_modsym(list,ms_matdata(Phi)));
+end intrinsic;
+
+//-------------------------------------------------------------------------
+// Tl_modsym_dist(Phi,el)
+//
+// Input:
+//      phi = modular symbol
+//	el = prime that doesn't divide the level of phi
+//
+// Output:
+//      phi | T_el (appropriately normalized)
+//-------------------------------------------------------------------------
+function Tl_modsym_dist(phi,el)
+	return modsym_dist_normalize(Tl_modsym(phi,el));
+end function;
+
+
+//-------------------------------------------------------------------------
+// Up_modsym_dist_poly(phi,p,f)
+//
+// Input:
+//      phi = modular symbol
+//	p = prime
+//	f = polynomial
+//
+// Output:
+//      phi | f(U_p)  (appropriately normalized)
+//-------------------------------------------------------------------------
+function Up_modsym_dist_poly(Phi,p,f)
+	Up_powers:=[Phi];
+	for d in [1..Degree(f)] do
+		Up_powers := Up_powers cat [Up_modsym_dist(Up_powers[d],p)];
+	end for;
+
+	answer:=modsym_scale(Coefficient(f,0),Phi);
+	for d in [1..Degree(f)] do
+		answer:=modsym_add(answer,modsym_scale(Coefficient(f,d),Up_powers[d+1]));
+	end for;
+	
+	return modsym_dist_normalize(answer);
+end function;
+
+//-------------------------------------------------------------------------
+// Tl_modsym_dist_poly(phi,el,f)
+//
+// Input:
+//      phi = modular symbol
+//	el = prime
+//	f = polynomial
+//
+// Output:
+//      phi | f(T_el)  (appropriately normalized)
+//-------------------------------------------------------------------------
+function Tl_modsym_dist_poly(Phi,el,f,k)
+	error if label(ms_datum(Phi,1)) ne "dist", "Error in Tl_modsym_poly";
+	Tl_powers:=[Phi];
+	for d in [1..Degree(f)] do
+		Tl_powers := Tl_powers cat [Tl_modsym_dist(Tl_powers[d],el)];
+	end for;
+
+	answer:=modsym_scale(Coefficient(f,0),Phi);
+	for d in [1..Degree(f)] do
+		answer:=modsym_add(answer,modsym_scale(Coefficient(f,d),Tl_powers[d+1]));
+	end for;
+	
+	return modsym_dist_normalize(answer);
+end function;
+
+
+forward Lk_obvious_lift;
+//-------------------------------------------------------------------------
+// up_modsym_dist(phi,p)
+//
+// Input:
+//      phi = modular symbol taking distributions with integral moments
+//		as values.  It must specialize to phi_beta
+//	p = prime
+//
+// Output:
+//      phi | U_p/alpha computed exactly
+//-------------------------------------------------------------------------
+function up_modsym_dist(Phi,p,alpha)
+	error if label(ms_datum(Phi,1)) ne "dist", "Error in up_modsym";
+	list:=[];
+	k:=dist_wt(ms_datum(Phi,1));
+	M:=dist_precision(ms_datum(Phi,1));
+	phi:=modsym_dist_total_measure(Phi);
+	for j in [1..ms_numfreegen(Phi)] do 
+		gam:=ms_section(Phi,ms_indexgen(Phi,j));
+		answer:=zero(label(ms_datum(Phi,1)));
+		for a in [0..p-1] do 
+			ga:=Matrix(2,2,[1,a,0,p]);
+			D:=matrix_to_divisor(ga*gam); 
+			answer:=add(answer,act_right_dist_improved(eval_modsym(Phi,D),ga));
+		end for;
+
+		//must now put back the first k+1 terms (which we know exactly)
+		answer:=add(answer,scale(1/alpha,Lk_obvious_lift(ms_datum(phi,j),M)));
+		
+		list cat:= [answer];
+	end for;
+	return(modsym_dist_normalize(form_modsym(list,ms_matdata(Phi))));
+end function;
+
+//-------------------------------------------------------------------------
+// up_modsym_dist_poly(phi,p,f)
+//
+// Input:
+//      phi = modular symbol
+//	p = prime
+//	f = polynomial
+//
+// Output:
+//      phi | f(U_p/p)  (appropriately normalized)
+//-------------------------------------------------------------------------
+function up_modsym_dist_poly(Phi,p,alpha,f)
+	error if label(ms_datum(Phi,1)) ne "dist", "Error in up_modsym_poly";
+	up_powers:=[Phi];
+	for d in [1..Degree(f)] do
+		up_powers := up_powers cat [up_modsym_dist(up_powers[d],p,alpha)];
+	end for;
+
+	answer:=modsym_scale(Coefficient(f,0),Phi);
+	for d in [1..Degree(f)] do
+		answer:=modsym_add(answer,modsym_scale(Coefficient(f,d),up_powers[d+1]));
+	end for;
+	
+	return modsym_dist_normalize(answer);
+end function;
+
+
+//-------------------------------------------------------------------------
+// precompute_divisor_data(W)
+//
+// Input:
+//      W = data of solved manin relations
+//
+// Output:
+//	Data used to help in precomputing the matrix actions used in U_p.
+//	Specifically a 2-tple [Ds,mats] is returned where
+//		-Ds is an array with four dimensions such that
+//		 if Ds[i][a][j][m]=<b,r,A> then
+//
+//		(phi|U_p)(D_i) = sum_a sum_j sum_m b*phi(n_r) | A
+//
+//	where n_r is the divisor attached to the r-th choosen coset rep,
+// 	(i.e. eval_modsym_gen(phi,r))
+//-------------------------------------------------------------------------
+function precompute_divisor_data(W,p)
+	Ds:=[* *];
+	Phi:=form_modsym([],W);
+	for i in [1..#W[5]] do
+		ans:=[* *];
+		g := ms_section(Phi,ms_indexgen(Phi,i));
+		for a in [0..p-1] do
+			ans2:=[* *];
+			D:=matrix_to_divisor(Matrix(2,2,[1,a,0,p])*g);
+			for j in [1..#D] do
+				ans3:=[**];
+				v:=list_of_unimodpath(point(D,j));
+				for m in [1..#v] do
+					gam:=v[m];
+					r:=p1_index([cc(gam),dd(gam)],ms_p1(Phi));
+					S:=gam*ms_section(Phi,r)^(-1);
+					Append(~ans3,<mult(D,j),r,S^(-1)*Matrix(2,2,[1,a,0,p])>);
+				end for;
+				Append(~ans2,ans3);
+			end for;
+			Append(~ans,ans2);
+		end for;
+		Append(~Ds,ans);
+	end for;
+
+	mats:=[];
+	for i in [1..#Ds] do
+		for a in [1..#Ds[i]] do
+			for j in [1..#Ds[i][a]] do
+				for m in [1..#Ds[i][a][j]] do
+					Append(~mats,Ds[i][a][j][m][3]);
+				end for;
+			end for;
+		end for;
+	end for;
+
+	return Ds,SetToSequence(SequenceToSet(mats));
+end function;
+
+//-------------------------------------------------------------------------
+// precompute_matrices_in_manin_relations(W)
+//
+// Input:
+//      W = data of solved manin relations
+//
+// Output:
+//	Returns a list of all matrices that appear anywhere inside the]
+//	row reduced matrix of manin relations.
+//-------------------------------------------------------------------------
+function precompute_matrices_in_manin_relations(W)
+	mats:=[];
+	for r in [1..NumberOfRows(W[1])] do
+		for c in [1..NumberOfColumns(W[1])] do
+			gam:=Eltseq(W[1][r][c]);
+			if gam ne [] then
+				for d in [1..#gam] do
+					Append(~mats,gam[d][2]^(-1));
+				end for;
+			end if;
+		end for;
+	end for;
+	
+	return SetToSequence(SequenceToSet(mats));
+end function;
+
+//-------------------------------------------------------------------------
+// precompute_right_action_data(mats)
+//
+// Input:
+//      mat = list of matrices
+//
+// Output:
+//	Returns an ordered pair [INDEX,ACT] such that if INDEX[r]=[a,b,c,d]
+// 	then ACT[r] contains the data of how to act on distributions by
+//	the matrix [a,b;c,d].
+//
+//	Specifically, ACT[r] is an M by M matrix s.t. if f = \sum a_i z^{-i} dz/z
+//	then ACT[r] * [a_0, a_1, ... , a_{m-1}]~ is the vector of coefficients
+//	of f | [a,b;c,d]
+//-------------------------------------------------------------------------
+function precompute_right_action_data(mats,M,pfr,verbose)
+	R := Order(pfr);
+	ZpM := quo<R | pfr^M>;
+	RpM<z>:=LaurentSeriesRing(ZpM,M);
+
+	INDEX := [[aa(mats[j]),bb(mats[j]),cc(mats[j]),dd(mats[j])] : j in [1..#mats]];
+	Sort(~INDEX);
+
+	ACT:=[];
+	q:=Cputime();
+	for j in [1..#INDEX] do 
+		if verbose and (j mod 500 eq 0) then
+			print "Up to",j,"out of",#mats;
+		end if;
+		ans := [];
+		a:=ZpM!INDEX[j][1];
+		b:=ZpM!INDEX[j][2];
+		c:=ZpM!INDEX[j][3];
+		d:=ZpM!INDEX[j][4];
+		det:=a*d-b*c;
+        Append(~ans,raw_dist_normalize_mod(b/a * z/(1-z*b/a), pfr));
+		first:=raw_dist_normalize_mod(det*z/(a-b*z)^2, pfr);
+		Append(~ans,first);
+		ratio:=raw_dist_normalize_mod((d*z-c)/(-b*z+a), pfr);
+		for r in [2..M-1] do
+			//minimum_precicion := Min(AbsolutePrecision(ans[#ans]), AbsolutePrecision(ratio));
+			Append(~ans,raw_dist_normalize_mod(RpM!ans[#ans] * RpM!ratio, pfr));
+//			Append(~ans,raw_dist_normalize(det*(d*z-c)^(r-1)/(-b*z+a)^(r+1)*z));
+		end for;
+		Append(~ACT,ans);
+		if (j eq 10) and verbose then
+			print "  Time to precompute right action for one matrix is",Cputime(q)/10,"secs.";
+			print "    Estimated total time is",Cputime(q)*#INDEX/10,"secs.";
+		end if;
+	end for;
+
+	L := NumberField(R);
+	ACTMAT:=[**];
+	for j in [1..#ACT] do
+		mat:=ZeroMatrix(L,M,M);
+		for r in [1..M] do
+			for c in [1..M] do
+				mat[r,c]:=L!R!Coefficient(ACT[j][c],r-1);
+			end for;
+		end for;
+		Append(~ACTMAT,mat);
+	end for;
+
+	return ACTMAT,INDEX;
+end function;
+
+//-------------------------------------------------------------------------
+// precompute_values_on_gens(Phi,ACT_gen,INDEX_gen)
+//
+// Input:
+//      phi = distribution valued modular symbol
+//	ACT_gen,INDEX_gen = precomputed data to speed up computation
+//
+// Output:
+//	Returns a list whose j-th entry is the value of Phi on the
+//	divisor corresponding to our j-th right coset rep.
+//-------------------------------------------------------------------------
+function precompute_values_on_gen(Phi,ACT_gen,INDEX_gen)
+	M:=modsym_dist_precision(Phi);
+	ans := [];
+	for j in [1..p1_size(ms_p1(Phi))] do  
+		g:=eval_modsym_gen_quick(Phi,j,ACT_gen,INDEX_gen);
+		f:=dist_ps(dist_normalize(g));
+	       	v:=Eltseq(f);
+        	r:=0;
+	        if #v ne 0 then
+			while Coefficient(f,r) eq 0 do
+       				Insert(~v,1,0);
+    	         		r:=r+1;
+	        	end while;
+		end if;
+	        while #v lt M do
+	                Append(~v,0);
+	        end while;
+		v:=[Coefficient(f,r) : r in [0..M-1]];
+	        v:=Matrix(M,1,v); 
+ 		Append(~ans,v);
+	end for;
+
+	return ans;
+end function;
+
+
+
+intrinsic Up_modsym_dist_quick(Phi::ModularSymbolSpcElt,~answer::ModularSymbolSpcElt,~ACT::List,~INDEX::SeqEnum,~ACT_gen::List,~INDEX_gen::SeqEnum : verbose := false)
+{//-------------------------------------------------------------------------
+// Up_modsym_dist_quick(phi,~answer,p,~ACT,~INDEX,~ACT_gen,~INDEX_gen)
+//
+// Input:
+//      phi = modular symbol taking distributions with integral moments
+//		as values
+//	~answer = the answer will be put into this variable
+//	p = prime
+//	~ACT,~INDEX,~ACT_gen,~INDEX_gen = precomputed data to speed up
+//					  computations.  if these variables
+//					  equal [] then this procedure
+//					  computes the needed values
+//	verbose = boolean
+//
+// Output:
+//      answer = phi | U_p  (with coefficients reduced mod the appropriate power of p)
+//-------------------------------------------------------------------------}
+	k := modsym_dist_weight(Phi);
+	M := modsym_dist_precision(Phi);
+	p := modsym_dist_prime(Phi);
+	pfr := modsym_dist_prime_ideal(Phi);
+	W:=ms_matdata(Phi);
+	Ds,mats:=precompute_divisor_data(W,p);
+
+	if #ACT eq 0 then
+		if verbose then
+			print "precomputing right action data for U_p ...";
+			t:=Cputime();
+		end if;
+
+		ACT,INDEX:=precompute_right_action_data(mats,M,pfr,verbose);
+
+		if verbose then
+			print "done in",Cputime(t),"secs.";
+			print "";
+		end if;
+	end if;
+
+	if #ACT_gen eq 0 then
+		if verbose then
+			print "precomputing right action data for matrices in Manin relations ...";
+			t:=Cputime();
+		end if;
+
+		mats_gen:=precompute_matrices_in_manin_relations(W);
+		ACT_gen,INDEX_gen:=precompute_right_action_data(mats_gen,M,pfr,verbose);
+
+		if verbose then
+			print "done in",Cputime(t),"secs.";
+			print "";
+		end if;
+	end if;
+
+	GEN:=precompute_values_on_gen(Phi,ACT_gen,INDEX_gen);
+
+	list:=[];
+	for i in [1..#ms_data(Phi)] do 
+		ans := zero("dist",k,M,pfr);
+		for a in [0..p-1] do
+			v:=Ds[i][a+1];
+			for k in [1..#v] do
+				for j in [1..#v[k]] do 
+					dat:=v[k][j]; 
+					ans:=add(ans,scale(dat[1],act_right_special(GEN[dat[2]],dat[3],pfr,ACT,INDEX)));
+				end for;
+			end for;
+		end for;
+		Append(~list,ans);
+	end for;
+
+	answer := modsym_dist_normalize(form_modsym(list,W));
+end intrinsic;
+
+

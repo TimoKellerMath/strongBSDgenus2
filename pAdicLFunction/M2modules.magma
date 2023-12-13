@@ -1,0 +1,322 @@
+//M_2(Z)-module formalism (or possibly a module for a smaller matrix group)
+//--------------------------------------------------------------------------
+//
+//This code establishes a formalism for handling Z-modules with an action
+//of M_2(Z) (or possibly some smaller matrix group).  Each element of
+//such an module (called an M_2-element) contains two pieces of data.
+//	1 - a string naming the module (label)
+//	2 - the data of the element
+//
+//The current possible labels are
+//	-"Qp" 	= Q_p
+//	-"Lk" 	= Polyomials of degree less than or equal to k
+//	-"dist"	= distributions on some disc
+//	-"modsym" = modular symbols with values in some M_2(Z)-module.
+//
+//The basic point of this formalism to handle modular symbols in a 
+//uniform way with values in some M_2(Z)-module.
+
+
+declare type M2ZElt;
+declare attributes M2ZElt: label, info;
+
+intrinsic Print(V::M2ZElt)
+{ Prints V. }
+	if V`label eq "dist" then
+		printf "dist: %o", [* dist_coef(V, j) : j in [0..dist_precision(V)-1] *];
+	else
+		printf "%o", V`info;
+	end if;
+end intrinsic;
+
+intrinsic label(V::M2ZElt) -> MonStgElt
+{//-------------------------------------------------------------------------
+// label(V)
+//
+// Input:
+//	V = M_2-element
+//
+// Output:
+//	The label of that element (i.e. "dist","Qp",etc.).
+//-------------------------------------------------------------------------}
+	return V`label;
+end intrinsic;
+
+
+intrinsic info(V::M2ZElt) -> Any
+{//-------------------------------------------------------------------------
+// info(V)
+//
+// Input:
+//	V = M_2-element
+//
+// Output:
+//	The data of that element.
+//-------------------------------------------------------------------------}
+	return V`info;
+end intrinsic;
+
+intrinsic form_m2_elt(type::MonStgElt,content::Any) -> M2ZElt
+{//-------------------------------------------------------------------------
+// form_m2_elt(V)
+//
+// Input:
+//	type = some type (i.e. "Qp","dist",...)
+//	content = the data of that type
+//
+// Output:
+//	The M_2-element with specified type and content.
+//-------------------------------------------------------------------------}
+	m2zelt := New(M2ZElt);
+	m2zelt`label := type;
+	m2zelt`info := content;
+	return m2zelt;
+end intrinsic;
+
+intrinsic zero(type::MonStgElt, k::RngIntElt, M::RngIntElt, p::Any) -> Any
+{//-------------------------------------------------------------------------
+// zero(type)
+//
+// Input:
+//	type = some type (i.e. "Qp","dist",...)
+//
+// Output:
+//	The zero element of a that type.
+//-------------------------------------------------------------------------}
+	if type eq "Qp" then
+		return(form_m2_elt("Qp",Zero(pAdicField(p,M))));
+	else
+		if type eq "dist" then
+			Q := Rationals();
+			return(form_dist(Zero(LaurentSeriesRing(Q,M)),k,p));
+                else
+			if type eq "Lk" then
+				return(form_Lk(0,k));
+			else
+				print "error in zero: type is ",type;
+			end if;
+		end if;
+	end if;
+end intrinsic;
+
+intrinsic zero(x::M2ZElt) -> Any
+{//-------------------------------------------------------------------------
+// zero(type)
+//
+// Input:
+//	type = some type (i.e. "Qp","dist",...)
+//
+// Output:
+//	The zero element of a that type.
+//-------------------------------------------------------------------------}
+	type := label(x);
+	if type eq "Qp" then
+		Qp := Parent(info(x));
+		return form_m2_elt("Qp",Zero(Qp));
+	else
+		if type eq "dist" then
+			f := dist_ps(x);
+			M := dist_precision(x);
+			R := CoefficientRing(Parent(f));
+			RR<w> := LaurentSeriesRing(R, M);
+			k := dist_wt(x);
+			pfr := dist_pfr(x);
+
+			return(form_dist(Zero(RR),k,pfr));
+        else
+			if type eq "Lk" then
+				k := Lk_weight(x);
+				return(form_Lk(0,k));
+			else
+				print "error in zero: type is ",type;
+			end if;
+		end if;
+	end if;
+end intrinsic;
+
+intrinsic scale(c::RngElt,v::M2ZElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// scale(c,v)
+//
+// Input:
+//	c = scalar
+//	v = M_2-element
+//
+// Output:
+//	Returns c*v.
+//-------------------------------------------------------------------------}
+	if ISA(Type(v), ModularSymbolSpcElt) then
+		return modsym_scale(c,v);
+	end if;
+	if (label(v) eq "Qp") then
+		return(form_m2_elt(label(v),c*info(v)));
+	else
+		if  (label(v) eq "dist") then
+			return dist_scale(c,v);
+		else
+			//if label(v) eq "modsym" then
+			//	return modsym_scale(c,v);
+			//else
+				if label(v) eq "Lk" then
+					return Lk_scale(c,v);
+				else
+					print "error in scale";
+				end if;
+			//end if;
+		end if;
+	end if;
+end intrinsic;
+
+
+intrinsic add(v::M2ZElt,w::M2ZElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// add(v,w)
+//
+// Input:
+//	v,w = M_2-elements
+//
+// Output:
+//	Returns v+w.
+//-------------------------------------------------------------------------}
+	if ISA(Type(v), ModularSymbolSpcElt) then
+		return modsym_add(v,w);
+	end if;
+	if label(v) ne label(w) then
+		print "error in add";
+	else
+		if (label(v) eq "Qp") then
+			return form_m2_elt("Qp",info(v)+info(w));
+		else
+			if (label(v) eq "dist") then
+				return dist_add(v,w);
+			else
+				//if label(v) eq "modsym" then
+				//	return modsym_add(v,w);
+				//else
+					if label(v) eq "Lk" then
+						return Lk_add(v,w);
+					else
+						print "error in add";
+					end if;
+				//end if;
+			end if;
+		end if;
+	end if;
+end intrinsic;
+
+
+intrinsic subtract(v::M2ZElt,w::M2ZElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// subtract(v,w)
+//
+// Input:
+//	v,w = M_2-element
+//
+// Output:
+//	Returns v-w.
+//-------------------------------------------------------------------------}
+	//error if label(v) ne label(w), "error in subtract";
+	return(add(v,scale(-1,w)));
+end intrinsic;
+
+
+intrinsic act_right(v::M2ZElt,gam::Mtrx) -> M2ZElt
+{//-------------------------------------------------------------------------
+// act_right(v,gam)
+//
+// Input:
+//	v = M_2-element
+//	gam = 2 by 2 matrix
+//
+// Output:
+//	Returns v | gam.
+//-------------------------------------------------------------------------}
+	if ISA(Type(v), ModularSymbolSpcElt) then
+		return act_right_modsym(v,gam);
+	end if;
+	if label(v) eq "Qp" then
+		return(v);
+	else
+		if label(v) eq "dist" then
+			return act_right_dist(v,gam);
+		else 
+			//if label(v) eq "modsym" then
+			//	return act_right_modsym(v,gam);
+			//else
+				if label(v) eq "Lk" then
+					return act_right_Lk(v,gam);
+				else
+					print "error in act right";
+				end if;
+			//end if;
+		end if;
+	end if;
+end intrinsic;
+
+
+intrinsic act_right_grp_alg(v::M2ZElt,T::AlgGrpElt) -> M2ZElt
+{//-------------------------------------------------------------------------
+// act_right_grp_alg(v,T)
+//
+// Input:
+//	v = M_2-element
+//	T = element of Z[M_2(Z)]
+//
+// Output:
+//	Returns v | T.
+//-------------------------------------------------------------------------}
+	list:=Eltseq(T);
+	answer := zero(v);
+	for j in [1..#list] do 
+		temp := scale(list[j][1],act_right(v,list[j][2]));
+		answer:=add(answer,temp);
+	end for;
+	return(answer);
+end intrinsic;
+
+
+
+//forward act_right_dist_quick;
+intrinsic act_right_quick(v::M2ZElt,gam::Mtrx,ACT::List,INDEX::SeqEnum) -> M2ZElt
+{//-------------------------------------------------------------------------
+// act_right_quick
+//
+// Input:
+//	v = distribution
+//	gam = 2 by 2 matrix
+//	ACT,INDEX = precomputed data used to speed the computation of
+//		    the action.
+//
+// Output:
+//	Returns v | gam.
+//-------------------------------------------------------------------------}
+	error if label(v) ne "dist", "error in act_right_quick";
+	
+	return act_right_dist_quick(v,gam,ACT,INDEX);
+end intrinsic;
+
+
+
+intrinsic act_right_grp_alg_quick(v::M2ZElt,T::AlgGrpElt,ACT::List,INDEX::SeqEnum) -> M2ZElt
+{//-------------------------------------------------------------------------
+// act_right_grp_alg_quick
+//
+// Input:
+//	v = distribution
+//	T = element of Z[M_2(Z)]
+//	ACT,INDEX = precomputed data used to speed the computation of
+//		    the action.
+//
+// Output:
+//	Returns v | gam.
+//-------------------------------------------------------------------------}
+	list:=Eltseq(T);
+	answer := zero(v);
+	for j in [1..#list] do 
+		temp := scale(list[j][1],act_right_quick(v,list[j][2],ACT,INDEX));
+		answer:=add(answer,temp);
+	end for;
+	return(answer);
+end intrinsic;
+
+

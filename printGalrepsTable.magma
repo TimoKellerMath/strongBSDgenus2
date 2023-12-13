@@ -1,0 +1,7 @@
+AttachSpec("Sha.spec");
+
+load "database.magma";
+
+for i -> Cf in DB do
+    print_table_line(Cf);
+end for;

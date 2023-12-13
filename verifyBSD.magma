@@ -1,0 +1,448 @@
+//SetMS(false); // avoid bug in Magma 2.28-3. Fixed in Magma 2.28-4
+
+Attach("Tamagawa/main.m");
+Attach("Tamagawa/regularity.m");
+AttachSpec("RealPeriod.spec");
+AttachSpec("Sha.spec");
+
+import "ShaAn.m": tamagawa_product, tamagawa_number;
+load "Galreps.m";
+//import "Galreps.m": get_coeffs, poss_tors;
+
+RF := recformat<index : Integers(),    // the number in the list
+                N : Integers(),        // the level
+                C0 : CrvHyp,           // the reduced minimal Weierstrass model of the curve
+                C : CrvHyp,            // a simplified model
+                J : JacHyp,            // the Jacobian of C
+                label : MonStgElt,     // the LMFDB label
+                class : Integers(),    // the number of the isogeny class (1 = a, 2 = b, ...)
+                f : ModFrmElt,         // one of the newforms attached to J
+                L_rank : Integers(),   // the analytic rank of L(f, s)
+                galreps,               // information on Galois representations with non-max. image
+                non_ss : SeqEnum,      // sequence containing non-semisimple primes
+                isog_deg : Integers(), // degree of the isogeny A_f --> J
+                I_bounds : List,       // multiplicative bound on the Heegner indices
+                H_primes : SetEnum,    // primes dividing the Heegner indices (bounds)
+                H_discs : SeqEnum,     // Heegner discriminants used
+                H_fields : SeqEnum,    // the corresponding Heegner fields
+                JQ_invs : SeqEnum,     // invariants of the group J(Q)
+                JK_invs : SeqEnum,     // invariants of the groups J(K) for the Heegner fields
+                JK_gens : List,        // list containing a sequence of generators of J(K) for each K
+                H_points : List,       // the Heegner points in the various J(K)
+                H_points_MW : List,    // the Heegner points as linear combination of the generators
+                MWs : List,            // Mordell--Weil groups
+                MWtoJKs : List,        // maps from Mordell--Weil groups to J(K)
+                polar : SeqEnum,       // the two intersection numbers describing the polarization
+                hseq : SeqEnum,        // the heights of the two components of the Heegner points
+                                       // on A_f, computed via Gross-Zagier
+                M : AlgMatElt,         // matrix quotient of height pairing matrices
+                discO_Af : Integers(), // the discriminant of the coefficient ring of the newform
+                discO_J : Integers(),  // the discriminant of the endomorphism ring of J
+                Sha_an : Integers(),   // the analytic order of Sha
+                TamJQ : Integers(),    // the Tamagawa product over Q
+                TamJKs : SeqEnum,      // the Tamagawa product over Heegner fields K
+                more>;                 // placeholder
+
+procedure print_prime_ideal(pr)
+  printf " (";
+  for i -> g in Generators(pr) do
+    printf "%o", ChangeUniverse(Eltseq(g), Integers());
+    if i lt #Generators(pr) then printf ", "; end if;
+  end for;
+  printf ")";
+end procedure;
+
+regular_primes := [p : p in PrimesUpTo(593) // p nmid h_{Q(mu_p)}
+                     | p notin [37, 59, 67, 101, 103, 131, 149, 157, 233, 257, 263, 271, 283,
+                                293, 307, 311, 347, 353, 379, 389, 401, 409, 421, 433, 461,
+                                463, 467, 491, 523, 541, 547, 557, 577, 587, 593]];
+
+function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
+    printf "\n====================================================\n\n";
+    if index gt 0 then
+      printf "index = %o: N := %o\n\n", index, N;
+    else
+      printf "N = %o\n\n", N;
+    end if;
+  // If a record Cf of type RF is given, it should contain C and N; the other entries will
+  // be filled in (except for label and class).
+    if Cf cmpne 0 then
+        Crec := Cf;
+        assert Crec`C eq C and Crec`N eq N;
+    else
+        Crec := rec<RF | index := index>;
+        Crec`C := C;
+        Crec`N := N;
+    end if;
+    C0 := ReducedMinimalWeierstrassModel(C);
+    Crec`C0 := C0;
+    J := Jacobian(C);
+    Crec`J := J;
+    _, m := EndomorphismRingGenus2(J);
+    discO_J := Discriminant(Domain(m));
+    Crec`discO_J := discO_J;
+    // determine Tamagwa numbers
+    if Tamseq cmpeq 0 then
+      Tamseq := [Parent(<2,1>)| ];
+    end if;
+    seen := {e[1] : e in Tamseq};
+    for p in [p : p in PrimeDivisors(N) | p notin seen] do
+      Append(~Tamseq, <p, tamagawa_number(C, p)>);
+    end for;
+    printf "Tamagawa numbers:";
+    for i -> e in Tamseq do
+      printf " c_%o = %o%o", e[1], e[2], i lt #Tamseq select "," else "";
+    end for;
+    printf "\n";
+    TamJQ := &*[Integers()| e[2] : e in Tamseq];
+    Crec`TamJQ := TamJQ;
+    printf "Tam(J/Q) = %o\n", Factorization(TamJQ);
+    printf "DiagramData ...\n";
+    time bpmseq, alphaseq, Mseq, ainO, JC, f, isom, Snew, L_is_zero_at_1 := DiagramData(C, N);
+    L_rank := L_is_zero_at_1 select 1 else 0;
+    Crec`f := f;
+    Crec`L_rank := L_rank;
+    Crec`non_ss := [Integers()| e[1] : e in Factorization(N) | e[2] gt 1];
+    Crec`isog_deg := Abs(Determinant(Mseq[2]));
+    Crec`polar := [ed[2*i] : i in [1..#ed div 2]] where ed := ElementaryDivisors(Mseq[1]);
+
+    try
+        // the frp with rho_frp possibly reducible
+        galreps := galrep_info(f, 200);
+        Crec`galreps := galreps;
+        O := CoefficientRing(f);
+        discO_Af := Discriminant(O);
+        Crec`discO_Af := discO_Af;
+        // CHECKME: is this the correct conductor? (the problem might be how Magma computes the discriminant)
+        // should be the square of the conductor
+        fO := ExactQuotient(discO_Af, Discriminant(MaximalOrder(O)))
+               * ExactQuotient(discO_J, Discriminant(MaximalOrder(O))); // need to compare with the maximal order
+        if fO ne 1 then
+          assert PrimeDivisors(fO) eq [2];
+          printf "At least one of the endomorphism rings is not regular at 2.\n";
+          printf " --> restrict to odd primes.\n";
+        end if;
+        flag, rt := IsSquare(discO_Af/discO_J); assert flag;
+        // make sure all odd prime ideals are "the same" in both endomorphism rings and regular
+        assert Set(PrimeDivisors(Numerator(rt)*Denominator(rt))) subset {2};
+        Df := Discriminant(MaximalOrder(O));
+        flag, rt := IsSquare(ExactQuotient(discO_Af, Df)); assert flag;
+        assert Set(PrimeDivisors(rt)) subset {2};
+        flag, rt := IsSquare(ExactQuotient(discO_J, Df)); assert flag;
+        assert Set(PrimeDivisors(rt)) subset {2};
+
+        // the non-regular prime ideals of O
+        SEulerSystem := &join{{Parent(ideal<O | 1>)| frp[1] : frp in Decomposition(O, p)} : p in PrimeDivisors(fO)};
+        Sred := {Parent(ideal<O | 1>)| gi[1] : gi in galreps | "R" in gi[2] and GCD(Norm(gi[1]), fO) eq 1};
+        S := Sred;
+        reduciblep := [Characteristic(ResidueClassField(frp)) : frp in S];
+        printf "reducible Galois representations for primes above %o.\n", reduciblep;
+        reduciblep := Set(reduciblep);
+        S join:= SEulerSystem;
+        // the prime ideals above 2
+        S2 := {Universe(S)| frp[1] : frp in Decomposition(O, 2)};
+        sha2 := ExactQuotient(#TwoSelmerGroup(J), #TwoTorsionSubgroup(J) * 2^(2 * L_rank));
+        printf "#Sha(J/Q)[2] = %o\n", sha2;
+        S join:= S2;
+        // STam := &join{{Parent(ideal<O | 1>)| e[1] : e in Decomposition(O, p)} : p in PrimeDivisors(TamJQ)};
+        // Try to remove primes from STam: if
+        // * v_q(TamQ) = 1,  so v_q(c_p) >= 1 (and then = 1) for exactly one p|N
+        // * there are two frq above q, exactly one of them (possibly) reducible
+        // * there is q-torsion in J(Q)
+        // * v_q(exponent(J(Q)_tors)) > v_q(p - a_p(f))
+        //   (where a_p(f) in {-1, 0, 1}; note that p-a_p(f) is the exponent of \J(\F_p)⁰)
+        // then the q-torsion must map surjectively onto the q-part of the component group at p,
+        // so the q-part of the component group comes from the reducible frq.
+        // We can then remove the other frq.
+        STam := {Parent(ideal<O | 1>)| };
+        tors := TorsionSubgroup(J);
+        exptors := #tors eq 1 select 1 else Invariants(tors)[#Invariants(tors)];
+        for e in Tamseq do
+          p, cp := Explode(e);
+          ap := Coefficient(f, p);
+          assert ap in {Parent(ap)| -1, 0, 1};
+          ap := Integers()!ap;
+          for q in PrimeDivisors(cp) do
+            prqs := {e[1] : e in Decomposition(O, q)};
+            if q gt 2 and #prqs eq 2 and #(Sred meet prqs) eq 1 and Valuation(p - ap, q) lt Valuation(exptors, q)
+              and Valuation(TamJQ, q) eq 1
+            then
+              printf "c_%o = %o: a_%o = %o\n", p, cp, p, ap;
+              printf "  q = %o: #prqs = %o, v_%o(exp(tors)) = %o, #(Sred meet prqs) = %o\n",
+                     q, #prqs, q, Valuation(exptors, q), #(Sred meet prqs);
+              printf "  --> can remove one prime ideal above %o from Tamagawa support\n", q;
+              STam join:= prqs meet Sred;
+            else
+              STam join:= prqs;
+            end if;
+          end for;
+        end for;
+
+        // compute first two Heegner discriminants
+        Crec`H_discs := [];
+        Crec`H_fields := [];
+        Crec`I_bounds := [* *];
+        Crec`H_primes := {};
+        Crec`H_points := [* *];
+        Crec`MWs := [* *];
+        Crec`MWtoJKs := [* *];
+        D_K := -3;
+        I_bound_with_hK := 0;
+        charid_bound_with_hK := [<ideal<O | 0>, 0>];
+        nI_K := 0;
+        while nI_K lt 3 do
+            D_K := NextHeegnerDiscriminant(N, D_K);
+            while IsEven(D_K) or D_K eq -3
+                  // when L_rank = 1, find a Heegner field whose class number is coprime to current bound
+                  // (up to powers of 2)
+                    or (L_rank eq 1 and I_bound_with_hK ne 0
+                          and not IsPowerOf(GCD(ClassNumber(QuadraticField(D_K)), I_bound_with_hK), 2)) do
+                D_K := NextHeegnerDiscriminant(N, D_K);
+            end while;
+            K := NumberField(Polynomial([-D_K, 0, 1]));
+            if L_rank eq 1 then
+                OK := Integers(K);
+                Zf := CoefficientRing(f);
+                I := ideal<Zf | 0>;
+                eta := KroneckerCharacter(D_K);
+                for n in [n : n in [2..200] | GCD(n, N * D_K) eq 1] do
+                    I +:= ideal<Zf | Coefficient(f, n) - Coefficient(f, n) * eta(n)>;
+                    if I eq ideal<Zf | 1> then
+                        break;
+                    end if;
+                end for;
+                if not IsPowerOf(Abs(Norm(I)), 2) then
+                    badPrimes := {frp[1] : frp in Factorization(I)};
+                    printf "bad primes: %o\n", badPrimes;
+                    printf "there are bad primes, trying next D_K.\n";
+                    continue;
+                end if;
+            end if;
+            printf "trying Heegner points for D_K = %o ...\n", D_K;
+            time y_Ks := HeegnerPoint(C, N, D_K : Snew := Snew, L_is_zero_at_1 := L_is_zero_at_1);
+            // Check that the height of the Heegner point is correct.
+            printf "checking height with Gross-Zagier ...\n";
+            time hty, Afhts, err := CheckHeegnerHeight(y_Ks[1], isom(ainO), f, L_is_zero_at_1);
+            printf "difference in height(y_K) vs. Gross-Zagier: %o\n", ChangePrecision(err, 6);
+            if hty lt 1e-10 then
+              printf "Height is zero ==> L-rank of J/K is not <= 1. Try next D_K.\n";
+              continue;
+            end if;
+
+            printf "computing Heegner ideal ...\n";
+            time charid, quotient, MWtoJ, MW := CharacteristicIdealOfSubmodule(y_Ks, JC);
+            // move to Z[f]
+            charid_Zf := [Parent(<ideal<O | 1>, 1>)| ];
+            for e in charid do
+              gens := [isom(g) : g in Generators(e[1])];
+              success := true;
+              if forall{a : a in gens | a in O} then
+                id := ideal<O | [O!a : a in gens]>;
+                if IsPrime(id) then
+                  Append(~charid_Zf, <id, e[2]>);
+                else
+                  success := false;
+                end if;
+              else
+                success := false;
+              end if;
+              if not success then
+                printf "prime ideal %o of End(J) does not correspond to a prime ideal of Z[f].\n", e[1];
+                printf "skipping.\n";
+              end if;
+            end for;
+            I_K := #quotient;
+            hK := ClassNumber(K);
+            if L_rank eq 1 then
+              printf "I_K = %o, h_K = %o\n", Factorization(I_K), hK;
+            else
+              printf "I_K = %o\n", Factorization(I_K);
+            end if;
+            if not IsEmpty(charid_Zf) then
+              printf "ideal factorization:";
+              for e in charid_Zf do
+                print_prime_ideal(e[1]);
+                if e[2] gt 1 then printf "^%o", e[2]; end if;
+              end for;
+              printf "\n";
+            end if;
+            Append(~Crec`H_discs, D_K);
+            Append(~Crec`H_fields, K);
+            Append(~Crec`I_bounds, <I_K, charid_Zf>);
+            Append(~Crec`H_points, y_Ks); // record both points
+            Append(~Crec`MWs, Domain(MWtoJ));
+            Append(~Crec`MWtoJKs, MWtoJ);
+            I_bound_with_hK := GCD(I_bound_with_hK, L_rank eq 0 select I_K else I_K * hK);
+            if L_rank eq 1 and hK gt 1 then
+              // "multiply" charid_Zf by the class number
+              prhK := &cat[[e[1] : e in Decomposition(O, p)] : p in PrimeDivisors(hK)];
+              prset := {e[1] : e in charid_Zf};
+              for pr in prhK do
+                if pr notin prset then Append(~charid_Zf, <pr, 1>); end if;
+              end for;
+            end if;
+            if charid_bound_with_hK eq [<ideal<O | 0>, 0>] then
+              charid_bound_with_hK := charid_Zf;
+            else
+              charid_map := pmap<Parent(ideal<O | 1>) -> Integers() | charid_Zf>;
+              pexp := function(pr)
+                        try
+                          return charid_map(pr);
+                        catch e
+                          return 0;
+                        end try;
+                      end function;
+              temp := [<e[1], Min(e[2], pexp(e[1]))> : e in charid_bound_with_hK];
+              charid_bound_with_hK := [e : e in temp | e[2] ne 0];
+            end if;
+            charid_bound_support := {e[1] : e in charid_bound_with_hK};
+
+            nI_K +:= 1;
+
+            if charid_bound_support subset S2 join Sred join STam then
+                break;
+            end if;
+        end while;
+
+        SEulerSystem join:= charid_bound_support join STam;
+        printf "gcd(I_bounds) = %o\n", Factorization(I_bound_with_hK);
+        if IsEmpty(charid_bound_support) then
+          printf "no prime ideal divides all Heegner ideals\n";
+        else
+          printf "prime ideals that occur in the support of all Heegner ideals:\n ";
+          for i -> pr in Setseq(charid_bound_support) do
+            printf " ";
+            print_prime_ideal(pr);
+            if i lt #charid_bound_support then printf ","; end if;
+          end for;
+          printf "\n";
+        end if;
+        // we don't need to check Tam(J/K) (Lemma 4.5.1) because we include frp | 2 in S
+        printf "prime divisors of Tam(J/Q) = %o\n", PrimeDivisors(TamJQ);
+        S join:= SEulerSystem;
+        // Sprimes is an upper bound for the support of #Sha(J/Q)
+        Sprimes := {Characteristic(ResidueClassField(frp)) : frp in S};
+        if sha2 eq 1 then Exclude(~Sprimes, 2); end if;
+        printf "The support of Sha(J/Q) is contained in S = %o.\n", Sprimes;
+        sha_an := L_rank eq 0 select Integers()!ShaAnRk0(C, N : Tamseq := Tamseq)
+                              else Integers()!ShaAnRk1(C, N : Tamseq := Tamseq, D := D_K, I := I_K, MWtoJ := MWtoJ);
+        printf "The analytic order of Sha(J/Q)_an is %o = %o.\n", sha_an, Factorization(sha_an);
+        if Set(PrimeDivisors(sha_an)) subset Sprimes then
+          printf "The support of #Sha(J/Q)_an is contained in the primes below primes in S.\n";
+          diff_primes := {Integers()| };
+        else
+          diff_primes := Set(PrimeDivisors(sha_an)) diff Sprimes;
+          printf "#Sha_an may have prime divisors not dividing #Sha: %o\n", diff_primes;
+        end if;
+        Sred := Sred diff S2;
+        SEulerSystem := SEulerSystem diff S2;
+        SEulerSystem := SEulerSystem diff Sred;
+
+        // if #Sha(J/Q)[2] = 1 or 2, then #Sha(J/Q)[2^infty] = 1 or 2, respectively
+        if sha2 in {1,2} then
+            if Valuation(sha_an, 2) ne Valuation(sha2, 2) then
+              printf "2-adic valuation %o of #Sha_an differs from v_2(#Sha[2]) = %o\n",
+                     Valuation(sha_an, 2), Valuation(sha2, 2);
+              Include(~diff_primes, 2);
+            end if;
+            S := S diff S2;
+            S2 := {};
+        end if;
+
+        if not IsEmpty(Sred) then
+          Sred1 := Sred;
+          // start of implementation of Proposition 6.2.1
+          JQtors := #TorsionSubgroup(J);
+          Stors := poss_tors(f, PrimesUpTo(200), get_coeffs(f, 200));
+          Stors := {frp : frp in Stors | IsDivisibleBy(JQtors, Characteristic(ResidueClassField(frp)))};
+          for frp in Stors do
+              p := Characteristic(ResidueClassField(frp));
+              if (p eq 2) or (Degree(frp) gt 1) then
+                  //Include(~Sred2, frp);
+                  continue;
+              end if;
+              printf "possible torsion prime ";
+              print_prime_ideal(frp);
+              printf ":\n";
+              if IsDivisibleBy(JQtors, p) and p in regular_primes then
+                  upperBoundOnShaFrp := #{q : q in PrimeDivisors(N) | IsDivisibleBy(q-1, p)}
+                                      + #{q : q in PrimeDivisors(N) | IsDivisibleBy(tamagawa_number(C, q), p)}
+                                      + (IsDivisibleBy(N, p) select 1 else 0)
+                                      - L_rank;
+                  if upperBoundOnShaFrp le 1 then
+                      printf "  dim Sha(J/Q)[frp] = 0 for frp = %o by 6.2.1\n", <p, Degree(frp)>;
+                      Exclude(~S, frp); // no more work to be done at frp
+                      Exclude(~Sred1, frp);
+                  else
+                      if IsOdd(upperBoundOnShaFrp) then
+                          upperBoundOnShaFrp := upperBoundOnShaFrp - 1;
+                      end if;
+                      printf "  dim Sha(J/Q)[frp] <= %o for frp = %o by 6.2.1\n",
+                              upperBoundOnShaFrp, <p, Degree(frp)>;
+                  end if;
+              end if;
+          end for;
+          Sred := Sred1;
+        end if;
+
+        if not IsEmpty(S) or not IsEmpty(diff_primes) then
+            printf "\nThe following remains to be done:\n";
+            if not IsEmpty(diff_primes) then
+              printf "* Check the computation of #Sha_an at the following primes: %o\n", diff_primes;
+            end if;
+            if not IsEmpty(S2) then
+                printf "* Show that #Sha(J/Q)[2^infty] = %o.\n", 2^Valuation(sha_an, 2);
+                if Valuation(sha_an, 2) le 3 then
+                    printf "  If this curve is from the LMFDB, this follows from Fisher-Yan.\n";
+                end if;
+            end if;
+            rem_p := {Integers()| };
+            for frp in Sred do
+                p := Characteristic(ResidueClassField(frp));
+                if Valuation(sha_an, p) eq 0 then
+                    printf "* Show that Sha(J/Q)[frp] = 0 for the reducible prime\n  frp =";
+                    print_prime_ideal(frp);
+                    printf " above %o.\n", p;
+                else
+                    Include(~rem_p, p);
+                end if;
+            end for;
+            for frp in SEulerSystem do
+                p := Characteristic(ResidueClassField(frp));
+                if Valuation(sha_an, p) eq 0 then
+                    printf "* Show that Sha(J/Q)[frp] = 0 for the irreducible prime\n  frp =";
+                    print_prime_ideal(frp);
+                    printf " above %o.\n", p;
+                else
+                    Include(~rem_p, p);
+                end if;
+            end for;
+            for p in rem_p do
+                printf "* Show that #Sha(J/Q)[%o^infty] = %o.\n", p, p^Valuation(sha_an, p);
+            end for;
+            printf "\n";
+        else
+            printf "\n===> BSD is true with #Sha = #Sha_an = %o.\n\n", sha_an;
+        end if;
+        return true, Crec;
+    catch e
+        printf "%o\n", e;
+    end try;
+    return false, _;
+end function;
+
+/*
+SetLogFile("LMFDB-curves.log");
+for i -> e in LMFDB_curves do if i ne 3 then
+  C := SimplifiedModel(HyperellipticCurve(e[2], e[3]));
+  flag, CR := verifyBSD(C, e[1] : index := i);
+end if; end for;
+*/
+
+/*
+_<x> := PolynomialRing(Rationals());
+C := HyperellipticCurve(20*x^5 - 19*x^4 + 118*x^3 - 169*x^2 + 50*x + 25);
+N := 145;
+
+verifyBSD(C, N);
+*/

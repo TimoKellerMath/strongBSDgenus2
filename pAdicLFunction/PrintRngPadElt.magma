@@ -1,0 +1,53 @@
+intrinsic MuInvariant(f::List) -> RngIntElt
+{ Outputs the Iwasawa \mu-invariant of the p-adic power series f, the maximum exponent of the uniformizer dividing f. }
+	return Minimum([Valuation(an) : an in f]);
+end intrinsic;
+
+intrinsic LambdaInvariant(f::List) -> RngIntElt
+{ Outputs the Iwasawa \lambda-invariant of the p-adic power series f. }
+	mu := MuInvariant(f);
+	for n -> an in f do
+		if Valuation(an) eq mu then
+			return n - 1; // the first entry is the 0-th coefficient
+		end if;
+	end for;
+end intrinsic;
+
+intrinsic PrintLFunction(f::List)
+{ Print the p-adic L-function f and its mu- and lambda-invariant. }
+	if #f eq 0 then
+		printf "0";
+	else
+		T := "T";
+		for n in [0..#f-1] do
+			a_n := f[n+1];
+			Kp := Parent(a_n);
+			Kp`SeriesPrinting := true;
+			//if (not IsZero(a_n)) /*or (n eq 0)*/ then
+				printf "(";
+				//Print(a_n);
+				printf "%o", a_n;
+				if n eq 0 then
+					printf ") + ";
+				elif n eq 1 then
+					printf ")*%o + ", T;
+				else
+					printf ")*%o^%o + ", T, n;
+				end if;
+			//end if;
+		end for;
+		if #f eq 0 then
+			printf "O(1)";
+		elif #f eq 1 then
+			printf "O(%o)", T;
+		else
+			printf "O(%o^%o)", T, #f;
+		end if;
+		printf "\nwith mu <= %o and lambda <= %o", MuInvariant(f), LambdaInvariant(f);
+	end if;
+end intrinsic;
+
+intrinsic PrintLFunction(f::RngSerLaurElt)
+{ Print the p-adic L-function f and its mu- and lambda-invariant. }
+	PrintLFunction(List(Eltseq(f)));
+end intrinsic;

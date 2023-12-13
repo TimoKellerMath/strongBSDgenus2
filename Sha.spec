@@ -1,0 +1,14 @@
+{
+  endomorphisms.m
+  EvaluateModularSymbols.m
+  jacmaps.m
+  CrvHypConversion.m
+  PeterssonNorm.m
+  HeegnerPoint.m
+  ManinConstant.m
+  ShaAn.m
+  MWgroup.m
+  periods.m
+  RealPeriod.m
+  Tamagawa_pkg2.m
+}

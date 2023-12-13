@@ -1,0 +1,87 @@
+//A distribution is an S_0(p)-module and so is stored as a 2-tuple 
+//[* "dist", data *] where the data is stored as a power series in z.
+
+intrinsic form_dist(f::RngSerLaurElt,k::RngIntElt,pfr::RngOrdIdl) -> M2ZElt {}
+	return form_m2_elt("dist", [* f,k,pfr *]);
+end intrinsic;
+
+intrinsic dist_ps(f::M2ZElt) -> RngSerLaurElt{}
+	assert f`label eq "dist";
+	return f`info[1];
+end intrinsic;
+
+intrinsic dist_wt(f::M2ZElt) -> RngIntElt{}
+	assert f`label eq "dist";
+	return f`info[2];
+end intrinsic;
+
+intrinsic dist_pfr(f::M2ZElt) -> RngOrdIdl{}
+	assert f`label eq "dist";
+	return f`info[3];
+end intrinsic;
+
+intrinsic dist_coef(f::M2ZElt,j::RngIntElt) -> Any{}
+	assert f`label eq "dist";
+	return Coefficient(dist_ps(f),j);
+end intrinsic;
+
+intrinsic dist_precision(f::M2ZElt) -> RngIntElt{}
+	return raw_dist_precision(dist_ps(f));
+end intrinsic;
+
+intrinsic dist_adjust_precision(f::M2ZElt,M::RngIntElt) -> M2ZElt{}
+	return form_dist(raw_dist_adjust_precision(dist_ps(f),M),dist_wt(f), dist_pfr(f));
+end intrinsic;
+
+intrinsic dist_normalize(f::M2ZElt) -> M2ZElt{}
+	return form_dist(raw_dist_normalize(dist_ps(f), dist_pfr(f)), dist_wt(f), dist_pfr(f));
+end intrinsic;
+
+intrinsic dist_add(f::M2ZElt,g::M2ZElt) -> M2ZElt{}
+	return(form_dist(dist_ps(f)+dist_ps(g),dist_wt(f), dist_pfr(f)));
+end intrinsic;
+
+intrinsic dist_scale(c::RngElt,f::M2ZElt) -> M2ZElt{}
+	L := CoefficientRing(Parent(dist_ps(f)));
+	return(form_dist(L!c*dist_ps(f),dist_wt(f), dist_pfr(f)));
+end intrinsic;
+
+intrinsic act_right_dist_weight_zero(f::M2ZElt,mat::Mtrx) -> M2ZElt{}
+	return form_dist(act_right_raw_dist_weight_zero(dist_ps(f),mat),dist_wt(f), dist_pfr(f));
+end intrinsic;
+
+intrinsic act_right_dist(f::M2ZElt,mat::Mtrx) -> M2ZElt{}
+	k:=dist_wt(f);
+	return(form_dist(act_right_raw_dist(dist_ps(f),mat,k),k, dist_pfr(f)));
+end intrinsic;
+
+intrinsic act_right_dist_quick(f::M2ZElt,mat::Mtrx,ACT::List,INDEX::SeqEnum) -> M2ZElt{}
+	k:=dist_wt(f);
+	return(form_dist(act_right_raw_dist_quick(dist_ps(f),mat,k,ACT,INDEX),k, dist_pfr(f)));
+end intrinsic;
+
+intrinsic act_right_dist_improved(f::M2ZElt,mat::Mtrx) -> M2ZElt{}
+	k:=dist_wt(f);
+	return form_dist(act_right_raw_dist_improved(dist_ps(f),mat,k),k, dist_pfr(f));
+end intrinsic;
+
+intrinsic dist_total_measure(f::M2ZElt) -> M2ZElt{}
+	return form_m2_elt("Qp",raw_dist_total_measure(dist_ps(f)));
+end intrinsic;
+
+intrinsic dist_valuation_list(f::M2ZElt) -> M2ZElt{}
+	return form_dist(raw_dist_valuation_list(dist_ps(f)),dist_wt(f), dist_pfr(f));
+end intrinsic;
+
+intrinsic dist_specialize(f::M2ZElt) -> M2ZElt{}
+	return raw_dist_specialize(dist_ps(f),dist_wt(f));
+end intrinsic;
+
+intrinsic dist_random(M::RngIntElt, k::RngIntElt, pfr::RngOrdIdl) -> M2ZElt{}
+	return form_dist(raw_dist_random(pfr, M),k,pfr);
+end intrinsic;
+
+intrinsic dist_random_measure_zero(M, k, pfr) -> M2ZElt{}
+	return form_dist(raw_dist_random_measure_zero(pfr, M),k,pfr);
+end intrinsic;
+

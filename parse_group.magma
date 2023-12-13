@@ -1,0 +1,172 @@
+AttachSpec("Sha.spec");
+Attach("HeegnerPoint.m");
+Attach("endomorphisms.m");
+//SetVerbose("MordellWeilGroup", 1);
+//SetVerbose("HeegnerPoint", 1);
+
+function parse_group(s)
+  // s = "J(?) = ", followed by {<cyc> + }* <cyc> with <cyc> ::= Z/<int> | Z | Z^int
+  while s[1] eq " " do s := s[2..#s]; end while;
+  assert s[1..2] eq "J(" and s[4..7] eq ") = ";
+  s := s[8..#s];
+  result := [Integers()|];
+  if s eq "0" then return result; end if;
+  i := 1;
+  while i le #s do
+    assert s[i] eq "Z";
+    if i+1 eq #s or s[i+1] eq " " then
+      Append(~result, 0);
+      i +:= 1;
+    elif s[i+1] eq "/" then
+      i +:= 2; j := i;
+      while j le #s and s[j] in "0123456789" do j +:= 1; end while;
+      Append(~result, StringToInteger(s[i..j-1]));
+      i := j;
+    elif s[i+1] eq "^" then
+      i +:= 2; j := i;
+      while j le #s and s[j] in "0123456789" do j +:= 1; end while;
+      result cat:= [0 : k in [1..StringToInteger(s[i..j-1])]];
+      i := j;
+    else
+      assert false;
+    end if;
+    if i lt #s then
+      assert s[i..i+2] eq " + ";
+      i +:= 3;
+    end if;
+  end while;
+  return result;
+end function;
+
+// Compute Heegner point and some other invariants
+// and print statements to store them to a file.
+procedure print_DB_instructions(entry, j, file)
+  N := entry`N;
+  C := entry`C;
+  Ds := entry`H_discs;
+  fprintf file, "hps := [* *];\n";
+  for i -> D in Ds do
+    //y_K, kernel_bound, L_is_zero_at_1, deg, discA, discJ := HeegnerPoint(C, N, D);
+    y_K := entry`H_points[i][1];
+    K<w> := BaseField(Parent(y_K));
+    fprintf file, "K<w> := NumberField(Polynomial(%o));\n", Coefficients(MinimalPolynomial(w));
+    fprintf file, "JK := BaseChange(DB[%o]`J, K);\n", j;
+    fprintf file, "Append(~hps, elt<JK | Polynomial(K, %o), Polynomial(K, %o), %o>);\n",
+                  Coefficients(y_K[1]), Coefficients(y_K[2]), y_K[3];
+  end for;
+  fprintf file, "DB[%o]`H_points := hps;\n", j;
+  fprintf file, "DB[%o]`L_rank := %o;\n", j, entry`L_rank; //L_is_zero_at_1 select 1 else 0;
+  fprintf file, "DB[%o]`discO_Af := %o;\n", j, entry`discO_Af; //discO_Af;
+  fprintf file, "DB[%o]`discO_J := %o;\n", j, entry`discO_J; //discO_J;
+  Flush(file);
+end procedure;
+
+// Compute generators of J(K) and print statements as above.
+procedure print_DB_JKgens(entry, j, file)
+  L_rank := entry`L_rank;
+  fprintf file, "JKgens := [* *]; Hps := [* *];\n";
+  //JKinvs := entry`JK_invs;
+  Hpoints := entry`H_points;
+  for k := 1 to #Hpoints do
+    y := Hpoints[k];
+    JK := Parent(y);
+    //MW, MWtoJK, fl1, fl2 := MordellWeilGroupJK(JK : Rank1 := 2*L_rank, Rank2 := 2*(1-L_rank));
+    MW := entry`MWs[k];
+    MWtoJK := entry`MWtoJKs[k];
+    fl1 := true;
+    fl2 := true;
+    if fl1 and fl2 then
+      //assert Invariants(MW) eq JKinvs[k];
+      fprintf file, "Append(~DB[%o]`JK_invs, %o);\n", j, Invariants(MW);
+      //y_seq := Eltseq(y @@ MWtoJK);
+      fprintf file, "JK := Parent(DB[%o]`H_points[%o]); K := BaseField(JK); w := K.1;\n", j, k;
+      fprintf file, "Append(~JKgens, [\n";
+      for n := 1 to Ngens(MW) do
+        gen := MWtoJK(MW.n);
+        fprintf file, "  elt<JK | Polynomial(K, %o), Polynomial(K, %o), %o>%o\n",
+                      Coefficients(gen[1]), Coefficients(gen[2]), gen[3],
+                      n lt Ngens(MW) select "," else "]);";
+      end for;
+      //fprintf file, "Append(~Hps, %o);\n", y_seq;
+    else
+      printf "WARNING @ entry no. %o: J(K) could not be provably determined!\n", j;
+      printf "Using empty sequence as marker.\n\n";
+      fprintf file, "Append(~JKgens, []);\n";
+    end if;
+  end for;
+  //fprintf file, "DB[%o]`JK_gens := JKgens; DB[%o]`H_points_MW := Hps;\n\n", j, j;
+  fprintf file, "DB[%o]`JK_gens := JKgens;\n\n", j;
+  Flush(file);
+end procedure;
+
+/*
+// Compute the canonical heights of the isotypical components
+// of the Heegner point on A_f, via Gross-Zagier.
+procedure print_DB_hseq(j, file : prec := 20)
+  entry := DB[j];
+  N := entry`N;
+  C := entry`C;
+  LIsZeroAt1 := entry`L_rank gt 0;
+  fprintf file, "hseq := [Parent([RealField(%o)|])|];\n", prec;
+  for D in entry`H_discs do
+    hs := HeegnerPointHeights(C, D, N : LIsZeroAt1 := LIsZeroAt1, Precision := prec);
+    fprintf file, "Append(~hseq, %o);\n", hs;
+  end for;
+  fprintf file, "DB[%o]`hseq := hseq;\n\n", j;
+  Flush(file);
+end procedure;
+
+// Compute the matrices M.
+procedure print_DB_M(j, file)
+  entry := DB[j];
+  hseq := entry`hseq;
+  J := entry`J;
+  O := Domain(OtoE) where _, OtoE := EndomorphismRingGenus2(J);
+  conjs := Conjugates(O.2);
+  JK_invs := entry`JK_invs;
+  JK_gens := entry`JK_gens;
+  H_points := entry`H_points;
+  assert #H_points eq #JK_invs and #H_points eq #JK_gens and #H_points eq #hseq;
+  Ms := [];
+  for i := 1 to #hseq do
+    // Determine the two versions of the height pairing matrix on O*y_K on A_f.
+    ht1, ht2 := Explode(hseq[i]);
+    hmat1 := Matrix([[ht1 + ht2, conjs[1]*ht1 + conjs[2]*ht2],
+                    [conjs[1]*ht1 + conjs[2]*ht2, conjs[1]^2*ht1 + conjs[2]^2*ht2]]);
+    hmat2 := Matrix([[ht1 + ht2, conjs[2]*ht1 + conjs[1]*ht2],
+                    [conjs[2]*ht1 + conjs[1]*ht2, conjs[2]^2*ht1 + conjs[1]^2*ht2]]);
+    // Determine the  height pairing matrix on O*y_K on J.
+    MW := AbelianGroup(JK_invs[i]);
+    MWtoJK := map<MW -> Universe(JK_gens[i]) | a :-> &+[s[k]*JK_gens[i,k] : k in [1..#JK_gens[i]]]
+                                                     where s := Eltseq(a)>;
+    hmat := HeightMatrixOnJK(H_points[i], MWtoJK);
+    // Look for quotient matrix with integer entries.
+    mat1 := 2*hmat1^-1*hmat;
+    mat2 := 2*hmat2^-1*hmat;
+    mat1Z := Matrix(Integers(), 2, 2, [Round(c) : c in Eltseq(mat1)]);
+    mat2Z := Matrix(Integers(), 2, 2, [Round(c) : c in Eltseq(mat2)]);
+    dev1 := Max([Abs(c) : c in Eltseq(mat1 - Parent(mat1)!mat1Z)]);
+    dev2 := Max([Abs(c) : c in Eltseq(mat2 - Parent(mat2)!mat2Z)]);
+    if dev1 lt 1e-10 and dev1 le dev2 then
+      matZ := mat1Z;
+      dev := dev1;
+    elif dev2 lt 1e-10 and dev2 lt dev1 then
+      matZ := mat2Z;
+      dev := dev2;
+    else
+      matZ := Parent(mat1Z)!0;
+      dev := Min(dev1, dev2);
+      printf "WARNING @ entry %o: No good integral approximation to the matrix quotient!\n", j;
+      printf "dev1 = %o, dev2 = %o\n", dev1, dev2;
+      printf "mat1 = %o\nmat2 = %o\n", mat1, mat2;
+    end if;
+    Append(~Ms, matZ);
+  end for;
+  if #Set(Ms) ne 1 then
+    printf "Ms = %o\n", Ms;
+  end if;
+  M := Ms[1];
+  fprintf file, "DB[%o]`M := Matrix(Integers(), 2, 2, %o);\n", j, Eltseq(M);
+  Flush(file);
+end procedure;
+*/

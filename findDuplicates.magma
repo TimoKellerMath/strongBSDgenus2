@@ -1,0 +1,102 @@
+load "parse_group.magma";
+load "database.magma";
+
+SetLogFile("findDuplicates.log");
+
+HasegawaLevelsRank0 :=
+  [<23, [], [11]>, <29, [], [7]>, <31,[], [5]>, <35,[7], [17]>, <39,[13], [7]>, <87,[29], [5]>];
+HasegawaLevelsRank1 :=
+  [<67,[67], []>, <73,[73], []>, <85,[5,17], []>, <93,[3,31], []>, <103,[103], []>, <107,[107], []>, <115,[5,23], []>, <125,[125], []>, <133,[7,19], []>,
+  <147,[3,49], []>, <161,[7,23], []>,
+  <165,[3,5,11], []>, <167,[167], []>, <177,[3,59], []>, <191,[191], []>, <205,[5,41], []>, <209,[11,19], []>, <213,[3,71], []>,
+  <221,[13,17], []>, <287,[7,41], []>, <299,[13,23], []>, <357,[3,7,17], []>];
+
+  _<x> := PolynomialRing(Rationals());
+  WangCurves := [
+      //< 63, HyperellipticCurve(14*x^3 - 7, x^3 - 1), 0>, // not absolutely simple
+      //<117, HyperellipticCurve(3*x^3 - 7, x^3 - 1), 0>, // not absolutely simple
+      <117, HyperellipticCurve(-x^6 - 3*x^4 - 5*x^3 - 12*x^2 - 9*x - 7, x^3 + 1), 0>,
+      <175, HyperellipticCurve(-x^5 - x^4 - 2*x^3 - 4*x^2 - 2*x - 1, x^3 + x^2 + 1), 0>
+      //<189, HyperellipticCurve(x^3 - 7, x^3 - 1), 0> // not absolutely simple
+  ];
+
+function SturmBound(N, k)
+    // Returns the Sturm bound for eigenforms of level N and weight k.
+    return Ceiling(k/12.0 * N * &*[1 + 1/p : p in PrimeDivisors(N)]) + 1;
+end function;
+
+function is_in_database(C, N)
+    f := find_f(C, N);
+    for Crec in DB do
+        if Crec`N eq N then 
+            if forall{n : n in [1..SturmBound(N,2)] | MinimalPolynomial(Coefficient(f,n)) eq MinimalPolynomial(Coefficient(Crec`f,n))} then 
+                return true;
+            end if;
+        end if;
+    end for;
+    return false;
+end function;
+
+printf "%o Hasegawa curves with L-rank 0:\n", #HasegawaLevelsRank0;
+printf "%o Hasegawa curves with L-rank 1:\n", #HasegawaLevelsRank1;
+for Nws in HasegawaLevelsRank0 cat HasegawaLevelsRank1 do 
+  N := Nws[1];
+  C := SimplifiedModel(X0NQuotient(N, Nws[2]));
+  printf "X_0(%o)/w%o: %o\n", N, Nws[2], is_in_database(C, N);
+end for;
+printf "\n";
+
+CNs := [];
+for Nws in HasegawaLevelsRank0 cat HasegawaLevelsRank1 do 
+  N := Nws[1];
+  C := SimplifiedModel(X0NQuotient(N, Nws[2]));
+  Append(~CNs, <C, N>);
+end for;
+
+for Nws in WangCurves do 
+  N, C := Explode(Nws);
+  Append(~CNs, <C, N>);
+end for;
+
+for Crec in DB do
+  Append(~CNs, <Crec`C0, Crec`N>);
+end for;
+
+Sort(~CNs, func< x, y | x[2] - y[2]>);
+
+i := 1;
+isomorphism_classes := 0;
+isogeny_classes := 0;
+while i le #CNs do
+  N := CNs[i][2];
+  printf "N = %o: ", N;
+  Cs := [CN2[1] : CN2 in CNs | CN2[2] eq N];
+  Afs := [];
+  fs := [**];
+  for C in Cs do 
+    f := find_f(C, N);
+    Append(~fs, f);
+  end for;
+
+  Cisoms := [];
+  for C in Cs do 
+    if not exists{Cisom : Cisom in Cisoms | IsIsomorphic(Cisom, C)} then
+      Append(~Cisoms, C);
+    end if;
+  end for;
+  isomorphism_classes +:= #Cisoms;
+  printf "%o isomorphism classes of C's, ", #Cisoms;
+
+  feqs := [* *];
+  for f in fs do 
+    if not exists{f2 : f2 in feqs | forall{n : n in [1..SturmBound(N,2)] | MinimalPolynomial(Coefficient(f2,n)) eq MinimalPolynomial(Coefficient(f,n))}} then
+      Append(~feqs, f);
+    end if;
+  end for;
+  isogeny_classes +:= #feqs;
+  printf "%o isogeny classes.\n", #feqs;
+
+  i := i + #Cs;
+end while;
+
+printf "\nin total: %o isomorphism classes, %o isogeny classes.\n", isomorphism_classes, isogeny_classes;

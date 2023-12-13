@@ -1,0 +1,721 @@
+//The goal of the procedures in this file are to 
+//solve the manin relations for a congruence subgroup
+//\Gamma by constructing a well-formed fundamental domain
+//for the action of \Gamma on upper half space.
+//See section ? of ?.
+
+
+
+
+//-----------------------------------------------------------------------------
+//Input: 
+//	N = positive integer greater than one
+//	p1N = P^1(Z/NZ)
+//
+//Output:
+//	This function constructs a connected fundamental domain for the
+//	action of \Gamma_0(N) on upper half space.  When
+//	\Gamma_0(N) is torsion free, the domain has the property
+//	that all of its vertices are cusps.  When \Gamma_0(N) has
+//	three torsion, 2 extra triangles need to be added.
+//
+//	The domain is constructed by beginning with the triangle
+//	with vertices 0,1 and infinity.  Each adjacent triangle is
+//	successively tested to see if it contains points not \Gamma_0(N)
+//	equivalent to some point in our region.  If a triangle contains
+//	new points, it is added to the region.  This process is continued
+//	until the region can no longer be extended (and still be a fundamental
+//	domain) by added an adjacent triangle.  The list of cusps between 0 
+//	and 1 are then returned
+//	See section ? of ? for details.
+//
+//	Precisely, the function returns a list such that
+//      the elements of the list with odd index are the cusps in 
+//	increasing order.  The even elements of the list are either
+//	an "x" or a "t".  A "t" represents that there is an element
+//	of order three such that its fixed point is in the triangle
+//	directly adjacent to the our region with vertices given by
+//	the cusp before and after the "t".  The "x" represents that
+//	this is not the case.
+//
+//Example:
+//	  > form_list_of_cusps(11);
+//	  > [* 0, x, 1/3, x, 1/2, x, 2/3, x, 1 *]
+//--------------------------------------------------------------------------
+forward insert_in_list;
+function form_list_of_cusps(N,p1N)
+	t:=Cputime();
+	error if N lt 2, "Error in form_list_of_cusps: level should be > 1";
+	s:=0;
+	matrices:=[Matrix(2,2,[1,0,0,1])];
+	C:=[*0/1,"?",1/1*];
+	tau:=Matrix(2,2,[0,-1,1,-1]);
+	full_domain:=false;
+
+	v:=[0 : r in [1..p1_size(p1N)]];
+	ans:=p1_index([0,1],p1N);
+	v[ans]:=1;
+	ans:=p1_index([1,-1],p1N);
+	v[ans]:=2;
+	ans:=p1_index([-1,0],p1N);
+	v[ans]:=3;
+	position:=4;
+
+
+	while (not full_domain) do
+		s:=s+1;		
+		full_domain:=true;
+	
+//this loop runs through the current set of cusps and checks to see
+//if more cusps should be added
+
+		for r in [1..(#C-1) div 2] do	
+			if C[2*r] eq "?" then
+				cusp1:=C[2*r-1];
+				cusp2:=C[2*r+1];
+				a1:=Numerator(cusp1);
+				b1:=Denominator(cusp1);
+				a2:=Numerator(cusp2);
+				b2:=Denominator(cusp2);
+				a:=a1+a2;
+				b:=b1+b2;
+				gam:=Matrix(2,2,[a2,a1,b2,b1]);
+				
+			//this is the point where it is determined whether
+			//or not the adjacent triangle should be added
+
+				pos:=p1_index([b2,b1],p1N);
+                                if v[pos] eq 0 then
+                                        v[pos]:=position;
+                                        ans:=p1_index([b1,-(b1+b2)],p1N);
+                                        v[ans]:=position+1;
+                                        ans:=p1_index([-(b1+b2),b2],p1N);
+                                        v[ans]:=position+2;
+                                        position:=position+3;
+					needed:=true;
+				else
+					needed := false;
+				end if;
+
+//				while (needed) and (j ne #matrices) do
+//					j:=j+1;
+//					if (cc(matrices[j])*dd(gam)-dd(matrices[j])*cc(gam)) mod N eq 0 then
+//					if (matrices[j]*gam^(-1))[2][1] mod N eq 0 then
+//						needed := false;
+//					end if;
+//					if (cc(matrices[j])*cc(gam)+dd(matrices[j])*cc(gam)+dd(matrices[j])*dd(gam)) mod N eq 0 then
+//					if (matrices[j]*tau*gam^(-1))[2][1] mod N eq 0 then
+//						needed := false;
+//					end if;
+//					if (matrices[j]*tau^2*gam^(-1))[2][1] mod N eq 0 then
+//					if (cc(matrices[j])*cc(gam)+cc(matrices[j])*dd(gam)+dd(matrices[j])*dd(gam)) mod N eq 0 then
+//						needed := false;
+//					end if;
+//				end while;
+
+				if needed then
+					if (gam*tau*gam^(-1))[2][1] mod N eq 0 then
+						Append(~matrices,gam);
+						C[2*r]:="t";
+					else
+						C[2*r]:="i";
+						Append(~matrices,gam);
+						full_domain:=false;
+					end if;
+				else
+					C[2*r]:="x";
+				end if;
+			end if;
+		end for;
+		r := 1;
+		while 2*r lt #C do
+			if C[2*r] eq "i" then
+				C[2*r]:="?";
+				cusp1:=C[2*r-1];
+				cusp2:=C[2*r+1];
+				a1:=Numerator(cusp1);
+				b1:=Denominator(cusp1);
+				a2:=Numerator(cusp2);
+				b2:=Denominator(cusp2);
+				a:=a1+a2;
+				b:=b1+b2;
+				C:=insert_in_list(C,2*r+1,a/b);
+				C:=insert_in_list(C,2*r+2,"?");
+			end if;
+			r := r + 1;
+		end while;
+	//print "Finished level",s,"at",Cputime(t);
+	end while;
+
+	return(C);	
+end function;
+
+//----------------------------------------------------------------------------
+//Input: 
+//	path = 2-vector [r,s] (thought of as a geodesic between these 
+//				points)
+//Output: 
+//	The path shifted by one to the right, i.e. [r-1,s-2]
+//----------------------------------------------------------------------------
+function shift_left(path);
+	return([path[1]-1,path[2]-1]);
+end function;
+
+//----------------------------------------------------------------------------
+//Input: 
+//	a = 2-vector = path = {r/s,u/v}
+//Output:
+//	Either the matrix [r,u;s,v] or [-r,-u;s,v], whichever
+//	has positive determinant
+//----------------------------------------------------------------------------
+function path_to_matrix(a)
+	r:=a[1];
+	s:=a[2];
+	if (r gt 10^100) or (r lt -10^100) then
+		v:=[1,0];
+	else
+		v:=[Numerator(r),Denominator(r)];
+	end if;
+	if (s gt 10^100) or (s lt -10^100) then
+		w:=[1,0];
+	else
+		w:=[Numerator(s),Denominator(s)];
+	end if;
+	M:=Matrix(2,2,[v[1],w[1],v[2],w[2]]);
+	if Determinant(M) lt 0 then
+		M[1][1]:=-M[1][1];
+		M[2][1]:=-M[2][1];
+	end if;
+
+	return(M);
+end function;
+
+//----------------------------------------------------------------------------
+//Checks if two paths are \Gamma_0(N)-equivalent
+//
+//Input: 
+//	a,b = 2 paths 
+//	N = integer
+//Output: 
+//	true or false depending on whether or not the two paths
+//	are \Gamma_0(N)-equivalent
+//----------------------------------------------------------------------------
+function gamma_equiv(a,b,N)
+	m:=path_to_matrix(a);
+	n:=path_to_matrix(b);
+	if (cc(m)*dd(n)-dd(m)*cc(n)) mod N eq 0 then
+		return(true);
+	else
+		return(false);
+	end if;
+end function;
+
+//----------------------------------------------------------------------------
+//Input: 
+//	a,b = 2 paths that are \Gamma_0(N)-equivalent 
+// 	N = integer
+//Output: 
+//	M in \Gamma_0(N) such that Mb=a
+//----------------------------------------------------------------------------
+function gamma_equiv_matrix(a,b,N)
+	m:=path_to_matrix(a);
+	n:=path_to_matrix(b);
+	ans:=m*n^(-1);
+	error if cc(ans) mod N ne 0, "Error in: gamma_equiv_matrix";
+	return(ans);
+end function;
+
+//----------------------------------------------------------------------------
+//This procedure takes the data of the list of cusps and begins to form
+//generators of H_1(X_0(N),{cusps},Z) as described in section ? of ?.
+//
+//Input: N = integer > 1
+//	 p1N = P^1(Z/NZ)
+//Output: <cusp_list,E,F,T2,T3,E1> where
+//	   cusps_list = list of cusps describing fundamental domain of 
+//	 		\Gamma_0(N).
+//	   E = list of paths in the boundary of the fundamental domains
+//		(shifted by 1 to the left) and oriented clockwise
+//		such that they do _not_ contain a point fixed by an
+//		element of order 2 and they are _not_ an edge of a 
+//		triangle containing a fixed point of an element of order 3
+//	   F = list of paths in the interior of the shifted domain
+//		with each orientation appearing separately
+//	  T2 = list of paths in the boundary of shifted domain containing
+//		a point fixed by an element of order 2 (oriented clockwise)
+//	  T3 = list of paths in the boundard of shifted domain which are
+//		the edges of some triangle containing a fixed point of a
+//		matrix of order 3 (both orientations appear)
+//	  E1 = a choosen sublist of E such that every path in E is
+//		\Gamma_0(N)-equivalent to either an element of E1 or 
+//		the flip (reversed orientation) of an element of E1.
+//		(Note that the elements of T2 are \Gamma_0(N)-equivalent
+//		 to their own flip.)
+//----------------------------------------------------------------------------
+function form_E_F_T(N,p1N)
+	cusp_list:=form_list_of_cusps(N,p1N);
+	T3:=[];
+	T2:=[];
+	E:=[];
+	F:=[];
+
+	for r in [1..(#cusp_list-1) div 2] do
+		path:=[cusp_list[2*r-1],cusp_list[2*r+1]];
+		if cusp_list[2*r] eq "t" then
+			Append(~T3,shift_left(path));
+			Append(~T3,shift_left(Reverse(path)));
+			error if gamma_equiv(path,Reverse(path),N), "EGADS!! Two and three torsion interact!!";
+		end if;
+	end for;
+
+	//print "Formed T3";
+
+	C:=[cusp_list[2*r-1]: r in [1..(#cusp_list+1) div 2]];
+	for r in [1..#C-1] do 
+		for s in [r..#C] do
+			if AbsoluteValue(Numerator(C[r])*Denominator(C[s])-Numerator(C[s])*Denominator(C[r])) eq 1 then
+				path:=[C[r],C[s]];
+				if r+1 eq s then
+					if (T3 eq []) or (Position(T3,shift_left(path)) eq 0) then
+						if gamma_equiv(path,Reverse(path),N) then
+							Append(~T2,shift_left(path));
+						else
+							Append(~E,shift_left(path));
+						end if;
+					end if;
+				else
+					Append(~F,shift_left(path));
+					Append(~F,shift_left(Reverse(path)));
+				end if;
+			end if;
+		end for;
+	end for;
+
+	//print "Formed T2 and F";
+
+	E:=[[Infinity(),-1/1]] cat E cat [[0/1,Infinity()]];	
+	E:=Reverse(E);
+
+	//print "Formed E";	
+
+	E1:=[];
+	for r in [1..#E] do
+		need := true;
+		for s in [1..#E1] do
+			if (gamma_equiv(Reverse(E[r]),E1[s],N)) then
+				need := false;
+			end if;
+		end for;
+		if need eq true then
+			Append(~E1,E[r]);
+		end if;
+	end for;
+
+	//print "Formed E1";
+
+	return(<cusp_list,E,F,T2,T3,E1>);
+end function;
+
+//-------------------------------------------------------------------------
+//This function returns a section of the map SL_2(Z) to P^1(Z/NZ)
+//given by [a,b;c,d] --> [c,d].  Such a section is
+//part of the data of the implementation of a modular symbol.
+//The section is formed from the data of E,F,T2,T3 constructed in
+//form_E_F_T as the matrices describing these lists of unimodular
+//paths form a full set of right cosets of \Gamma_0(N) \ SL_2(Z).
+//
+//Input: 
+//	E,F,T2,T3 as described above
+//	p1N = P^1(Z/NZ) formed by the function form_p1_data
+//Output: 
+//	a list from 1..#p1N of matrices describing the section
+//	that is, given our fixed enumeration of P^1(Z/NZ), the
+//	j-th element of the list represents the image of the j-th
+//	element of P^1(Z/NZ) under the section.
+//-------------------------------------------------------------------------
+function form_section(E,F,T2,T3,p1N)
+	section:=[ Matrix(2,2,[0,0,0,0]) : j in [1..#p1N]];
+	for r in [1..#F] do
+		M:=path_to_matrix(F[r]);
+		v:=[M[2][1],M[2][2]];
+		section[p1_index(v,p1N)]:=M;
+	end for;
+	for r in [1..#T2] do
+		M:=path_to_matrix(T2[r]);
+		v:=[M[2][1],M[2][2]];
+		section[p1_index(v,p1N)]:=M;
+	end for;
+	for r in [1..#T3] do
+		M:=path_to_matrix(T3[r]);
+		v:=[M[2][1],M[2][2]];
+		section[p1_index(v,p1N)]:=M;
+	end for;
+	for r in [1..#E] do
+		M:=path_to_matrix(E[r]);
+		v:=[M[2][1],M[2][2]];
+		section[p1_index(v,p1N)]:=M;
+	end for;
+	
+	return section;
+end function;
+
+//-------------------------------------------------------------------------
+//Input: 
+//	list = a list in the form of a permutation of the numbers
+//		from 1 to #list.
+//Output: 
+//	this function forms list^(-1) viewed as a permutation
+//-------------------------------------------------------------------------
+function form_reversed_list(list)
+        list2:=[0 : x in [1..#list]];
+        for j in [1..#list] do
+                list2[list[j]]:=j;   
+        end for;
+        return(list2);
+end function;           
+
+//--------------------------------------------------------------------------
+//Input: 
+//	F = list of unimodular paths
+//	p1N = P^1(Z/NZ)
+//Output: 
+//	Each path is converted to a matrix and then an element of
+//	P^1(Z/NZ) and then a list of integers is returned that
+//	represents these elements of P^1 via our fixed enumeration.
+//--------------------------------------------------------------------------
+function paths_to_p1_index(F,p1N)
+	ans := [];
+	for r in [1..#F] do
+		M:=path_to_matrix(F[r]);
+		v:=[M[2][1],M[2][2]];
+		ans := ans cat [p1_index(v,p1N)];
+	end for;
+
+	return ans;
+end function;
+
+//--------------------------------------------------------------------------
+//Input: 
+//	v,w = lists
+//Output:
+//	returns the list of elements in v that are not in w
+//--------------------------------------------------------------------------
+function list_difference(v,w)
+	ans := [];
+	for r in [1..#v] do
+		if Position(w,v[r]) eq 0 then
+			ans := ans cat [v[r]];
+		end if;
+	end for;
+
+	return ans;
+end function;
+
+
+
+intrinsic solve_manin_relations(N::RngIntElt) -> List
+{//--------------------------------------------------------------------------
+//Input: 
+//	N = integer > 1
+//Output:
+//	returns a 7-tuple (described in modsym.magma) that represents
+//	the solution to the manin relations for \Gamma_0(N)
+//--------------------------------------------------------------------------}
+	//This is a specified matrix of order 3
+	tau:=Matrix(2,2,[0,-1,1,-1]);
+
+	p1N:=create_p1mod(N);
+	temp:=form_E_F_T(N,p1N);
+	C:=temp[1];
+	C:=[C[2*r-1]:r in [1..(#C+1) div 2]];
+	E:=temp[2];
+	F:=temp[3];
+	T2:=temp[4];
+	T3:=temp[5];
+	E1:=temp[6];
+	E2 := list_difference(E,E1);
+
+	//print "Formed E2";
+
+//T31 represent the three torsion paths going from left to right
+	T31:=[T3[2*r-1] : r in [1..#T3 div 2]];	
+//T32 represent the three torsion paths going from right to left
+	T32:=[T3[2*r] : r in [1..#T3 div 2]];	
+
+
+	//print "created P^1";
+
+	sec:=form_section(E,F,T2,T3,p1N);
+
+	//print "formed section";
+	
+	W:=[* 0,0,0,0,0,0,0*];
+	W[7]:=sec;
+	W[6]:=p1N;
+
+//We now put our paths in the order:
+//	F,E2,T32,E1,T2,T31
+//and then W[2] will be the permutation that 
+//associates to the j-th element of this list
+//its index in P1.
+
+	W[2]:=[];
+
+	W[2]:=W[2] cat paths_to_p1_index(F,p1N);
+	W[2]:=W[2] cat paths_to_p1_index(E2,p1N);
+	W[2]:=W[2] cat paths_to_p1_index(T32,p1N);
+	W[2]:=W[2] cat paths_to_p1_index(E1,p1N);
+	W[2]:=W[2] cat paths_to_p1_index(T2,p1N);
+	W[2]:=W[2] cat paths_to_p1_index(T31,p1N);
+
+	//print "formed W[2]";
+
+	W[3]:=form_reversed_list(W[2]);
+
+	W[5]:=[ W[2][r] : r in [#W[2]-#E1-#T2-#T31+1..#W[2]]];
+				
+	W[4]:=[ 0 : r in [1..#W[2]]];
+	for r in [1..#W[5]] do
+		W[4][W[5][r]]:=r;
+	end for;
+
+	height:=#F+#T2+#T3+#E-#E1+1;
+	Z:=Integers();
+	Q:=Rationals();
+	GLQ:=GL(2,Q);
+	ZGLQ:=GroupAlgebra(Z,GLQ);
+	mat:=ZeroMatrix(ZGLQ,#F+#T2+#T3+#E-#E1+1,#p1N[1]);
+
+	//print "Computing relation between E2 and E1";
+//Computes the relations between E2 and E1
+	for r in [1..#E2] do
+		pair_found := false;
+		s:=1;
+		while not pair_found do
+			error if s gt #E1, "Error in: solve_manin_relations 1";
+			if gamma_equiv(Reverse(E2[r]),E1[s],N) then
+				pair_found := true;
+				gamma:=gamma_equiv_matrix(Reverse(E2[r]),E1[s],N);
+				mat[#F+r][#F+#E2+#T32+s]:=ZGLQ!GLQ!gamma;
+				mat[#F+r][#F+r]:=ZGLQ!GLQ!1;
+			end if;
+			s := s+1;
+		end while;
+	end for;
+
+	//print "Computing relation between T32 and T31";
+//Computes the relations between T32 and T31
+	for r in [1..#T32] do
+		mat[#F+#E2+r][#F+#E2+r]:=ZGLQ!GLQ!1;
+		mat[#F+#E2+r][#F+#E2+#T32+#E1+#T2+r]:=ZGLQ!GLQ!1;
+	end for;
+
+	//print "Computing relations of F (of size",#F,")";
+//Computes the relations of F
+	for r in [1..#F] do  
+		mat[r][r]:=ZGLQ!GLQ!1;
+		v:=F[r];
+		if v[1] lt v[2] then
+			e:=-1;
+		else
+			e:=1;
+		end if;
+
+		r1:=Position(C,v[1]+1);
+		r2:=Position(C,v[2]+1);		
+
+		if r1 gt r2 then
+			temp:=r2;
+			r2:=r1;
+			r1:=temp;
+		end if;
+
+		if #C - r2 + r1 lt r2 - r1 - 1 then
+			for s in [r1..r2-1] do
+				w:=[C[s]-1,C[s+1]-1];
+				if Position(E1,w) ne 0 then
+					mat[r,#F+#E2+#T32+Position(E1,w)]:=e*ZGLQ!GLQ!1;
+				else
+					if Position(E2,w) ne 0 then
+						mat[r,#F+Position(E2,w)]:=e*ZGLQ!GLQ!1;
+					else
+						if Position(T2,w) ne 0 then
+							mat[r,#F+#E2+#T32+#E1+Position(T2,w)]:=e*ZGLQ!GLQ!1;
+						else
+							if Position(T31,w) ne 0 then
+								mat[r,#F+#E2+#T32+#E1+#T2+Position(T31,w)]:=e*ZGLQ!GLQ!1;
+							else
+								err :=true;
+								error if err, "Error in: solve_manin_relations 2";
+							end if;
+						end if;
+					end if;
+				end if;
+			end for;
+		else
+			e := -e;
+			mat[r][#F+#E2+#T32+1]:=e*(-ZGLQ!GLQ!Matrix(2,2,[1,-1,0,1])+ZGLQ!GLQ!1);
+			for s in [1..r1-1] do
+				w:=[C[s]-1,C[s+1]-1];
+				if Position(E1,w) ne 0 then
+					mat[r,#F+#E2+#T32+Position(E1,w)]:=e*ZGLQ!GLQ!1;
+				else
+					if Position(E2,w) ne 0 then
+						mat[r,#F+Position(E2,w)]:=e*ZGLQ!GLQ!1;
+					else
+						if Position(T2,w) ne 0 then
+							mat[r,#F+#E2+#T32+#E1+Position(T2,w)]:=e*ZGLQ!GLQ!1;
+						else
+							if Position(T31,w) ne 0 then
+								mat[r,#F+#E2+#T32+#E1+#T2+Position(T31,w)]:=e*ZGLQ!GLQ!1;
+							else
+								err :=true;
+								error if err, "Error in: solve_manin_relations 2";
+							end if;
+						end if;
+					end if;
+				end if;
+			end for;
+			for s in [r2..#C-1] do
+				w:=[C[s]-1,C[s+1]-1];
+				if Position(E1,w) ne 0 then
+					mat[r,#F+#E2+#T32+Position(E1,w)]:=e*ZGLQ!GLQ!1;
+				else
+					if Position(E2,w) ne 0 then
+						mat[r,#F+Position(E2,w)]:=e*ZGLQ!GLQ!1;
+					else
+						if Position(T2,w) ne 0 then
+							mat[r,#F+#E2+#T32+#E1+Position(T2,w)]:=e*ZGLQ!GLQ!1;
+						else
+							if Position(T31,w) ne 0 then
+								mat[r,#F+#E2+#T32+#E1+#T2+Position(T31,w)]:=e*ZGLQ!GLQ!1;
+							else
+								err :=true;
+								error if err, "Error in: solve_manin_relations 2";
+							end if;
+						end if;
+					end if;
+				end if;
+			end for;
+		end if;
+	end for;
+
+	
+	//print "  clearing two-term relations";
+
+	//this clears the 1's that appear in the E2 region
+	for r in [1..#F] do  
+		for s in [#F+1..#F+#E2] do 
+			if mat[r][s] ne 0 then
+				c:=#F+#E2+#T32+1;
+				while (mat[s][c] eq 0) or (mat[s][c] eq Matrix(2,2,[1,0,0,1])) do
+					c := c + 1;
+				end while;
+				mat[r][c]:=mat[r][c]-mat[r][s]*mat[s][c];
+				mat[r][s]:=0;
+//				AddRow(~mat,-mat[r][s],s,r);
+			end if;
+		end for;
+	end for;
+
+  //print "Forming boundary relation";
+//We now form the single boundary relation
+	for r in [#F+1..#F+#E2] do
+		mat[height][r]:=ZGLQ!GLQ!1;
+	end for;
+
+	for r in [#F+#E2+#T32+1..#p1N[1]] do
+		mat[height][r]:=ZGLQ!GLQ!1;
+	end for;
+
+	//this clears the 1's that appear in the E2 region
+	for s in [#F+1..#F+#E2] do
+		if mat[height][s] ne 0 then
+			AddRow(~mat,-mat[height][s],s,height);
+		end if;
+	end for;
+
+  //print "Computing 2-torsion relations";
+//We now form the 2-torsion relations
+	for r in [1..#T2] do
+		gamma:=gamma_equiv_matrix(Reverse(T2[r]),T2[r],N);
+		mat[#F+#E2+#T32+r][#F+#E2+#T32+#E1+r]:=ZGLQ!GLQ!1 + ZGLQ!GLQ!gamma;
+	end for;	
+
+  //print "Computing 3-torsion relations";
+//We now form the 3-torsion relations
+	for r in [1..#T31] do
+		gamma:=path_to_matrix(T31[r])*tau*path_to_matrix(T31[r])^(-1);
+		mat[#F+#E2+#T32+#T2+r][#F+#E2+#T32+#E1+#T2+r]:=ZGLQ!GLQ!1 + ZGLQ!GLQ!gamma + ZGLQ!GLQ!gamma^2;
+	end for;	
+
+
+	W[1]:=mat;
+
+	return W;
+end intrinsic;
+
+
+intrinsic get_single_relation(W::List) -> List
+{//--------------------------------------------------------------------------
+//Input: 
+//	W = modular symbol data
+//Output:
+//	returns the single relation between the generators (E1,T2,T31)
+//	described by going around the boundary of the fundamental domain.
+//
+//	the form of the relation is a list of lists of matrices.  The sum of 
+//	the matrices in the i-th list represents the coefficient in our
+//	relation of the i-th generator.
+//--------------------------------------------------------------------------}
+        rel:=W[1][NumberOfRows(W[1])];
+        temp:=[];
+        for d in [1..#W[5]] do
+                temp:=temp cat [Eltseq(rel[#W[4]-#W[5]+d])];
+        end for;
+
+        for d in [1..#temp] do
+                if temp[d][1][1] eq -1 then
+                        c:=temp[d][1];
+                        temp[d][1]:=temp[d][2];
+                        temp[d][2]:=c;
+                end if;
+        end for;
+
+        gam:=[];
+        for d in [1..#temp] do
+                if #temp[d] eq 2 then
+                        gam := gam cat [[temp[d][1][2],temp[d][2][2]]];
+                else
+                        gam := gam cat [[temp[d][1][2]]];
+                end if;
+        end for;
+
+        return(gam);
+end intrinsic;
+
+
+//--------------------------------------------------------------------------
+//function insert_in_list(list,r,elt)
+//
+//Input: 
+//	list = list of elements
+//	r = integer
+//	elt = some element
+//Output:
+//	inserts elt into the r-th slot of list and shifts remaining elements
+//	forward.
+//--------------------------------------------------------------------------
+function insert_in_list(list,r,elt)
+        ans:=[**];
+        for j in [1..r-1] do
+                ans[j]:=list[j];
+        end for;
+        ans[r]:=elt;
+        for j in [r+1..#list+1] do
+                ans[j]:=list[j-1];
+        end for;
+
+        return ans;
+end function;
+

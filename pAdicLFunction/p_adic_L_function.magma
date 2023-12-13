@@ -1,0 +1,175 @@
+// Magma translation of Sage code
+
+function teich(a,p,M)
+	R:=pAdicRing(p,M);
+	return TeichmuellerSystem(R)[a+1];
+end function;
+
+function logp(p,z,M)
+	//"""returns the truncation sum_{j=1}^{M-1} (-1)^j/j z^j of log_p(1+z)"""
+	ans := 0;
+	for j in [1..M-1] do
+		ans:=ans+(-1)^j/j*z^j;
+	end for;
+	return ans;
+end function;
+
+function binomial(x,n)
+  assert n ge 0;
+  return n eq 0 select One(Parent(x)) else &*[x-i : i in [0..n-1]] / Factorial(n);
+end function;
+
+function loggam_binom(p,gam,z,n,M)
+	L:=logp(p,z,M);
+	logpgam := Evaluate(L, gam-1);
+	loggam := L/logpgam;
+
+	loggambinom := binomial(loggam,n);
+	return [Coefficient(loggambinom, i) : i in [0..M-1]];
+end function;
+
+function phi_on_Da(Phi,a,D,p)
+	Dinf:=[* <[0,1], -1>, <[1,0], 1> *];
+	D_a := act_left_divisor(Matrix(2,2,[1,a,0,p]), Dinf);
+	if D eq 1 then
+		return dist_normalize(eval_modsym(Phi, D_a));
+	else
+		return dist_normalize(eval_modsym_twist(Phi, D_a, D));
+	end if;
+end function;
+/*
+function basic_integral(Phi,a,j,ap,D,p,M)
+	//"""returns int_{a+pZ_p} (z-{a})^j dPhi(0-infty) -- see formula [PS, sec 9.2] """
+	ap := ap * KroneckerSymbol(D,p);
+	ans := 0;
+	for r in [0..j] do
+		ans := ans + Binomial(j,r) * (a-teich(a,p,M))^(j-r) * p^r * dist_coef(phi_on_Da(Phi,a,D,p), r);
+	end for;
+	return ans / ap;
+end function;*/
+
+function precompute_basic_integrals(Phi,j_max,ap,D,p,M)
+	//"""returns int_{a+pZ_p} (z-{a})^j dPhi(0-infty) -- see formula [PS, sec 9.2] """
+	pfr := modsym_dist_prime_ideal(Phi);
+	R := Order(pfr);
+	Rpfr, map_pfr := Completion(R, pfr : Precision := M);
+
+	Zp:=pAdicRing(p,M); // TODO: pfr != p: M * ...
+	teichmueller_system := TeichmuellerSystem(Zp);
+
+	ap := map_pfr(R!(ap * KroneckerSymbol(D,p)));
+	basic_integrals := [[]];
+	for a in [1..p-1] do
+		mu_a_D := phi_on_Da(Phi,a,D,p);
+		basic_integrals[a] := [&+[Binomial(j,r) * (a-teichmueller_system[a+1])^(j-r) * p^r * map_pfr(R!dist_coef(mu_a_D, r)) : r in [0..j]] / ap : j in [0..j_max]];
+	end for;
+	return basic_integrals;
+end function;
+
+function pAdicLFunctionCoefficient(Phi,ap,n,D,gam,p,M :  lb := [], basic_integrals := []) //err := 0,
+	Zp:=pAdicRing(p,M); // TODO: pfr != p: M * ...
+	teichmueller_system := TeichmuellerSystem(Zp);
+
+	// TODO: pfr != p
+	S<z> := LaurentSeriesRing(Zp);
+	if lb eq [] then
+		lb:=loggam_binom(p,gam,z,n,2*M);
+	end if;
+
+	j_max := M - 1;
+	if basic_integrals eq [] then
+		basic_integrals := precompute_basic_integrals(Phi,j_max,ap,D,p,M);
+	end if;
+	dn := 0;
+	for j in [0..j_max] do
+		cjn := lb[j+1];
+		dn +:= cjn * &+[teichmueller_system[a+1]^(-j) * basic_integrals[a][j+1] : a in [1..p-1]];
+	end for;
+	return dn;
+end function;
+
+/*
+function pLfunction(Phi,ap,M,p : quad_twist := 0)
+//	"""Returns the p-adic L-function in the T-variable of a quadratic twist of Phi
+//
+//Inputs:
+//	Phi -- overconvergent Hecke-eigensymbol;
+//	ap -- eigenvalue at p;
+//	quad_twist -- conductor of quadratic character"""
+
+	if quad_twist eq 0 then
+		D:=1;
+	else
+		D:=quad_twist;
+	end if;
+	gam := 1 + p;
+	// precompute values
+	//for a in range(1,p):
+	//	for j in range(M):
+	//		basic_integral(Phi,a,j,ap,D)
+
+	R<pi>:=pAdicField(p,M);
+	S<z>:=LaurentSeriesRing(R);
+	SS<T> := LaurentSeriesRing(R);
+	ans:=SS!pAdicLFunctionCoefficient(Phi,ap,0,D,gam,p,M);
+	err:=1; // Infinity; any number > 0
+	n:=1;
+	while (err gt 0) and (n le M) do
+		//print "n =", n;
+		lb:=loggam_binom(p,gam,z,n,2*M);
+		err:=Min([j+Valuation(lb[j+1]) : j in [M..#lb-1]]);
+		if err gt 0 then
+			dn := pAdicLFunctionCoefficient(Phi,ap,n,D,gam,p,M : err := err);
+			ans := ans + dn * T^n;
+		end if;
+		n:=n+1;
+	end while;
+	return ans;
+end function;*/
+
+
+intrinsic pAdicLFunction(Phi::ModularSymbolSpcElt,ap::RngElt, scaling_exponent::RngIntElt : quad_twist := 0) -> SeqEnum
+	{"""Returns the p-adic L-function in the T-variable of a quadratic twist of Phi
+
+Inputs:
+	Phi -- overconvergent Hecke-eigensymbol;
+	ap -- eigenvalue at p;
+	quad_twist -- conductor of quadratic character"""}
+	M := modsym_dist_precision(Phi);
+	p := modsym_dist_prime(Phi);
+
+	D := quad_twist eq 0 select 1 else quad_twist;
+	gam := 1 + p;
+
+	//pfr := modsym_dist_prime_ideal(Phi);
+	//R := Order(pfr);
+	//L := NumberField(R);
+	//Rpfr, map_pfr := Completion(R, pfr : Precision := M);
+	//Lpfr := Completion(L, pfr : Precision := M);
+
+	Qp:=pAdicField(p,M);
+	S<z>:=LaurentSeriesRing(Qp, 2*M);
+	
+	function ChangeAbsolutePrecision(x, k)
+		return ChangePrecision(x, Maximum(0, k - (AbsolutePrecision(x) - RelativePrecision(x))));
+	end function;
+
+	basic_integrals := precompute_basic_integrals(Phi,M-1,ap,D,p,M);
+	prec := M - scaling_exponent - 1;
+	zeroth_moment := pAdicLFunctionCoefficient(Phi,ap,0,D,gam,p,M: basic_integrals := basic_integrals) / p^scaling_exponent;
+	moments:= [* ChangeAbsolutePrecision(zeroth_moment, prec) *];
+	//err:=M+10000; // Infinity; any number > 0
+	n:=1;
+	while n le prec do // (err gt 0) and the precison is lower because we scaled!
+		//print "n =", n;
+		lb:=loggam_binom(p,gam,z,n,2*M);
+		//err:=Min([j+Valuation(lb[j+1]) : j in [M..#lb-1]]);
+		//if err gt 0 then
+			dn := pAdicLFunctionCoefficient(Phi,ap,n,D,gam,p,M : lb := lb, basic_integrals := basic_integrals) / p^scaling_exponent; // err := err, 
+			Append(~moments, ChangeAbsolutePrecision(dn, prec - n));
+		//end if;
+		n +:= 1;
+	end while;
+	printf "moments: %o\nvaluations: %o\n", moments, [Valuation(x) : x in moments];
+	return moments;
+end intrinsic;

@@ -1,0 +1,65 @@
+Attach("Tamagawa/main.m");
+Attach("Tamagawa/regularity.m");
+AttachSpec("RealPeriod.spec");
+AttachSpec("Sha.spec");
+
+SetLogFile("3200.log");
+
+SetVerbose("HeegnerPoint", 4);
+
+SetDebugOnError(true);
+
+//import "DB-Recformat.m": RF;
+
+
+RF := recformat<index : Integers(),    // the number in the list
+                N : Integers(),        // the level
+                C0 : CrvHyp,           // the reduced minimal Weierstrass model of the curve
+                C : CrvHyp,            // a simplified model
+                J : JacHyp,            // the Jacobian of C
+                label : MonStgElt,     // the LMFDB label
+                class : Integers(),    // the number of the isogeny class (1 = a, 2 = b, ...)
+                f : ModFrmElt,         // one of the newforms attached to J
+                L_rank : Integers(),   // the analytic rank of L(f, s)
+                galreps,               // information on Galois representations with non-max. image
+                non_ss : SeqEnum,      // sequence containing non-semisimple primes
+                isog_deg : Integers(), // degree of the isogeny A_f --> J
+                I_bound : Integers(),  // multiplicative bound on the Heegner index
+                H_primes : SetEnum,    // primes dividing the Heegner index (bound)
+                H_discs : SeqEnum,     // Heegner discriminants used
+                H_fields : SeqEnum,    // the corresponding Heegner fields
+                JQ_invs : SeqEnum,     // invariants of the group J(Q)
+                JK_invs : SeqEnum,     // invariants of the groups J(K) for the Heegner fields
+                JK_gens : List,        // list containing a sequence of generators of J(K) for each K
+                H_points : List,       // the Heegner points in the various J(K)
+                H_points_MW : List,    // the Heegner points as linear combination of the generators
+                polar : SeqEnum,       // the two intersection numbers describing the polarization
+                hseq : SeqEnum,        // the heights of the two components of the Heegner points
+                                       // on A_f, computed via Gross-Zagier
+                M : AlgMatElt,         // matrix quotient of height pairing matrices
+                discO_Af : Integers(), // the discriminant of the coefficient ring of the newform
+                discO_J : Integers(),  // the discriminant of the endomorphism ring of J
+                Sha_an : Integers(),   // the analytic order of Sha
+                more>;                 // placeholder
+
+
+_<x> := PolynomialRing(Rationals());
+C := HyperellipticCurve(-10*x^6 + 100*x^5 - 320*x^4 + 400*x^3 - 380*x^2 + 200*x - 40);
+N := 3200;
+
+Cf := rec<RF | >;
+Cf`C := C;
+Cf`J := Jacobian(C);
+Cf`L_rank := 0;
+Cf`N := N;
+Cf`f := find_f(C, Cf`N);
+f := Cf`f;
+printf "f = %o\n", f;
+
+time I_K := HeegnerIndex(C, f : prec := 462);
+printf "I_K = %o\n", I_K;
+
+time sha_an := ShaAnRk0(C, N);
+printf "#Sha(J/Q)_an = %o\n", sha_an;
+
+//printf "#Sha(J/Q)_an = %o\n", ShaAn(Cf : Asymptotics := false); // Asymptotics := false: provably correct L-values

@@ -1,0 +1,118 @@
+intrinsic matrix(r::RngIntElt,c::RngIntElt) -> Mtrx
+{//-------------------------------------------------------------------------
+//Input: 
+//	r,c = integers
+//Output:
+//	r by c zero matrix
+//-------------------------------------------------------------------------}
+
+	return(Matrix(r,c,[<1,1,0>]));
+end intrinsic;
+
+
+intrinsic p1_size(p1M::Tup) -> RngIntElt
+{//-------------------------------------------------------------------------
+//Input: 
+//	P^1(Z/NZ) (formed by create_p1_mod)
+//Output:
+//	size of P^1(Z/NZ)
+//-------------------------------------------------------------------------}
+
+	return(#p1M[1]);
+end intrinsic;
+
+//-------------------------------------------------------------------------
+//Input: 
+//	M = integer
+//Output:
+//	the data of P^1(Z/MZ) -- see next function
+//-------------------------------------------------------------------------
+function form_p1_data(M);
+	grid := matrix(M,M);
+	list:=[];
+	counter:=0;
+	for r in [1..M-1] do
+		for c in [0..M-1] do
+			if (Gcd(Gcd(r,c),M) eq 1) then 
+				if grid[r+1,c+1] eq 0 then
+					counter:=counter + 1;
+					grid[r+1,c+1]:=counter;
+					list := list cat [[r,c]];
+					for a in [1..M] do
+						if Gcd(a,M) eq 1 then
+							rr := (r * a) mod M;
+							cc := (c * a) mod M;
+							grid[rr+1,cc+1]:=grid[r+1,c+1];
+						end if;
+					end for;
+				end if;
+			else
+				grid[r+1,c+1]:=-1;
+			end if;
+		end for;
+	end for;	
+	list := list cat [[0,1]];
+	grid[1,1]:=-1;
+	for c in [1..M-1] do
+		grid[1,c+1]:=#list;
+	end for;
+
+	return grid,list;
+end function;
+
+
+intrinsic create_p1mod(M::RngIntElt) -> Tup
+{//-------------------------------------------------------------------------
+//Input:
+//	M = integer
+//Output:
+//	creates two objects which together form P^1(Z/MZ)
+//	the first object is a list of vectors [x,y] that
+//	give a set of representatives of P^1(Z/MZ)
+//	the second object is an M by M grid whose value at
+//	the r,c-th place is the index of the "standard representative"
+//	equivalent to [r,c] occuring in the first list.
+//	if r and c are not coprime(mod M) the grid has value -1.}
+
+	grid,list := form_p1_data(M);
+	return(<list,grid,M>);
+end intrinsic;
+
+
+intrinsic p1_index(v::SeqEnum,p1M::Tup) -> RngIntElt
+{//-------------------------------------------------------------------------
+//Input:
+//	v = [x,y] = elt of proj space
+//Output:
+//	returns the index of the standard rep equivalent to v
+//-------------------------------------------------------------------------}
+	assert #v eq 2;
+
+	v[1]:=v[1] mod p1M[3];
+	v[2]:=v[2] mod p1M[3];
+	return(p1M[2][v[1]+1,v[2]+1]);
+end intrinsic;
+
+//-------------------------------------------------------------------------
+//Input:
+//	k = integer
+//	p1M = P^1(Z/MZ)
+//Output:
+//	returns the k-th standard rep of proj space
+//-------------------------------------------------------------------------
+function std_rep_to_p1(k,p1M)
+	return(p1M[1][k]);
+end function;
+
+
+//-------------------------------------------------------------------------
+//Input:
+//	p1M = P^1(Z/MZ)
+//	v = [x,y] elt of proj space
+//
+//Output:
+//	returns the standard rep equivalent to v
+//-------------------------------------------------------------------------
+function p1_std_form(v,p1M)
+	return(std_rep_to_p1(p1_index(v,p1M),p1M));
+end function;

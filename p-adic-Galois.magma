@@ -1,0 +1,60 @@
+// degree 1
+
+p := 3;
+G := SL(2, Integers(p^2));
+subs := Subgroups(G);
+allcharpols := {CharacteristicPolynomial(g) : g in G};
+for Hs in subs do
+    H := Hs`subgroup;
+    if not #ChangeRing(H, GF(p)) eq #SL(2, p) then
+        continue;
+    end if;
+    charpols := {CharacteristicPolynomial(g) : g in H};
+    print #charpols, allcharpols diff charpols, #H eq #G;
+end for;
+printf "\n";
+
+// degree 2
+
+p := 3;
+q := p^2;
+G := SL(2, q);
+gl2 := MatrixRing(GF(q), 2);
+h := gl2![ [1,0], [0,-1] ];
+e := gl2![ [0,1], [0,0] ];
+f := gl2![[0,0], [1,0]];
+sl2 := sub<gl2 | [h, e, f] >;
+function coords(v);
+    for a,b,c in GF(q) do 
+        if a * h + b * e + c * f eq v then 
+            return [a,b,c];
+        end if;
+    end for;
+end function;
+GL3 := GL(3, GF(q));
+action := hom < G -> GL3 | g :-> GL3![coords(g * v * g^-1) : v in [h,e,f]] >;
+ad := GModule(G, [action(G.i) : i in [1..2]]);
+assert IsIrreducible(ad);
+printf "Ad: SL_2(F_9) -> sl_2(F_9) is irreducible.\n";
+
+load "188.2.a.a.m";
+
+f := MakeNewformModFrm_188_2_a_a();
+O := Integers(CoefficientRing(f));
+assert IsInert(3, O);
+traces := {};
+//tracesmod3 := {Trace(g) : g in SL(2, 3)};
+ell := 1;
+while #traces le #quo<O|3> do
+    ell := NextPrime(ell);
+    if IsDivisibleBy(Level(f), ell) then // only good primes
+        continue;
+    end if;
+    if ell mod 9 ne 1 then // constant term of char poly 1
+        continue;
+    end if;
+    print ell;
+    Include(~traces, quo<O | 9>!Coefficient(f, ell));
+    print traces;
+end while;
+printf "mod 9 image full SL2\n";

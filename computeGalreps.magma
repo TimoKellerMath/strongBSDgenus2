@@ -1,0 +1,19 @@
+AttachSpec("Sha.spec");
+
+load ".m";
+
+SetLogFile("galreps.log");
+
+SetDebugOnError(true);
+
+
+for i -> Cf in DB do
+    printf "N = %o (#%o):\n", Cf`N, i;
+    try
+        gi := galrep_info(Cf`f, 200);
+        print_info(gi);
+    catch e 
+        printf "%o\n", e;
+    end try;
+    printf "\n";
+end for;

@@ -1,0 +1,25 @@
+intrinsic ZeroMatrix(R::Rng,r::RngIntElt,c::RngIntElt) -> Mtrx
+{Returns the zero matrix over the ring R.}
+	return Matrix(R,r,c,[<1,1,Zero(R)>]);
+end intrinsic;
+
+intrinsic aa(mat::Mtrx) -> RngElt
+{Returns the 1,1 entry of the matrix over the ring R.}
+     return mat[1,1];
+end intrinsic;
+
+intrinsic bb(mat::Mtrx) -> RngElt
+{Returns the 1,2 entry of the matrix over the ring R.}
+     return mat[1,2];
+end intrinsic;
+
+intrinsic cc(mat::Mtrx) -> RngElt
+{Returns the 2,1 entry of the matrix over the ring R.}
+     return mat[2,1];
+end intrinsic;
+
+intrinsic dd(mat::Mtrx) -> RngElt
+{Returns the 2,2 entry of the matrix over the ring R.}
+     return mat[2,2];
+end intrinsic;
+

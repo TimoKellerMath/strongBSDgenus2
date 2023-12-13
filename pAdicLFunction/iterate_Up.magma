@@ -1,0 +1,165 @@
+declare verbose pAdicLFunction, 3;
+
+import "modsym.magma": eval_modsym_pt;
+
+
+intrinsic form_Up_eigensymbol(f::ModFrmElt,p::RngIntElt,sign::RngIntElt,M::RngIntElt : 
+						Conj := 1, j := 1, verbose := true) -> ModularSymbolSpcElt, ModularSymbolSpcElt, RngElt
+{//-------------------------------------------------------------------------
+// form_Up_eigensymbol(f,p,sign,M)
+//
+// Input:
+//  f = newform of level N
+//  p = prime number
+//	sign = +1 or -1
+//	M = desired accuracy 
+//	verbose = boolean
+//
+// Output:
+//	A U_p eigensymbol to accuracy p^M lifting the +1/-1 symbol attached
+//	to E.
+//-------------------------------------------------------------------------}
+	
+	assert sign in {+1,-1};
+
+	N := Level(f);
+	k := Weight(f) - 2;
+	Zf := CoefficientRing(f);
+	Qf := NumberField(Zf);
+	if Type(Qf) eq FldRat then
+		Qf := NumberField(Polynomial([0,1]) : DoLinearExtension);
+		Zf := Integers(Qf);
+		pfr := ideal<Zf | p>;
+	else
+		Zf := MaximalOrder(Qf);
+		Ps := Decomposition(Zf, p);
+		//pfr := Ps[j][1];
+		if #Ps gt 1 then
+			error "Only the case p inert is implemented yet. For primes of degree 1, one can use Sage.";
+			vprintf pAdicLFunction, 2: "There are %o primes lying above %o", #Ps, p;
+			vprintf pAdicLFunction, 2: ", choosing %oth of degree %o and ramification index %o.\n", 
+					j, Degree(pfr), Ps[j][2];
+		end if;
+		pfr := Ps[1,1];
+	end if;
+
+	Gal, _, m := AutomorphismGroup(Qf);
+	sigma := m([g : g in Gal][Conj]);
+	vprintf pAdicLFunction, 2: "Using conjugate by Gal(Q(f)|Q).%o.\n", Conj;
+
+	primes := PrimesUpTo(SturmBound(N, k + 2));
+	aplist := [sigma(Qf!Coefficient(f, ell)) : ell in primes];
+	ap := sigma(Qf!Coefficient(f, p));
+	alpha := ap;
+
+	if (alpha eq 0) or (Valuation(alpha, pfr) ge k + 1) then
+		error "must have ord_p(alpha) < k + 1";
+	end if;
+
+	vprint pAdicLFunction, 2: "Solving Manin relations ...";
+	W := solve_manin_relations(N);
+	vprint pAdicLFunction, 2: "Creating modular symbol ...";
+	phi := create_modsym_from_fourier(N,k,aplist,Qf,W,sign : Conj := j, f := f, p := p, pAdic_prec := 2*M);
+	vprintf pAdicLFunction, 2: "Computed %o values of the modular symbol phi.\n", #ms_data(phi);
+	vprint pAdicLFunction, 3: ms_data(phi);
+
+	// scale to have integral moments (see below)
+	m := Minimum([m : m in [0..Ceiling(Log(M + 2) / Log(p))] | p^m gt M + 1]);
+	scaling_exponent := m + 1;
+
+	p_stabilization := false;
+	if IsDivisibleBy(N, p) then
+		vprint pAdicLFunction, 2: "Lifting symbol ...";
+		Phi := lift_modsym(phi,N,pfr,M,aplist);
+	else
+		vprint pAdicLFunction, 1: "p does not divide N, computing p-stabilization of Phi ...";
+		p_stabilization := true;
+		
+		QfpM, map_pfr := Completion(Qf, pfr : Precision := 2*M); // TODO: Precision
+		charpol_Up := Polynomial(QfpM, [p^(k+1), map_pfr(-ap), 1]);
+		alphabeta := Roots(charpol_Up, QfpM);
+		assert #alphabeta eq 2;
+		
+		if Valuation(alphabeta[1][1]) eq 0 then
+			alpha := alphabeta[1][1];
+			beta := alphabeta[2][1];
+		else
+			alpha := alphabeta[2][1];
+			beta := alphabeta[1][1];
+		end if;
+		assert Valuation(alpha) eq 0;
+		assert Valuation(beta) gt 0;
+		alpha := alpha@@map_pfr; // take an approximation of alpha in Lpfr by an element from L
+		beta := beta@@map_pfr;
+		assert Valuation(alpha, pfr) eq 0;
+		assert Valuation(beta, pfr) gt 0;
+
+		vprint pAdicLFunction, 2: "Solving Manin relations for Np ...";
+		WNp := solve_manin_relations(N * p);
+		vprint pAdicLFunction, 2: "Computing p-stabilization ...";
+		
+		phi := pstabilize(phi, alpha, p, WNp);
+		vprintf pAdicLFunction, 2: "Computed %o values of the modular symbol phi.\n", #ms_data(phi);
+		
+		vprint pAdicLFunction, 2: "Lifting symbol ...";
+		Phi := lift_modsym(phi,N*p,pfr,M,aplist);
+
+		N := N * p;
+		W := WNp;
+	end if;
+
+	// scale to have integral moments
+	newM := M - scaling_exponent - 1;
+	vprintf pAdicLFunction, 2: "Scaling by p^%o (new precision: %o) ...\n", scaling_exponent, newM;
+	Phi := scale(p^scaling_exponent, Phi);
+
+	vprintf pAdicLFunction, 2: "Computing %o part of Phi ...\n", sign eq +1 select "plus" else "minus";
+	if sign eq 1 then
+		time Phi:=plus_part_modsym(Phi);
+	else
+		Phi:=minus_part_modsym(Phi);
+	end if;
+
+	vprintf pAdicLFunction, 2: "Normalizing Phi ...\n";
+	Phi := modsym_dist_normalize(Phi);
+
+	ACT := [* *];
+	INDEX := [];
+	ACT_gen := [* *];
+	INDEX_gen := [];
+
+	vprint pAdicLFunction, 2: "Computing overconvergent eigenlift ...";
+
+	answer:=[Phi];
+	count:=1;
+	accuracy := 0;
+	while count le M do
+		t:=Cputime();
+
+		Up_modsym_dist_quick(answer[#answer], ~Phi, ~ACT,~INDEX,~ACT_gen,~INDEX_gen : verbose := verbose);
+
+		if verbose then
+			print "Time to apply U_p is", Cputime(t), "secs. Estimated total time is", Cputime(t)*M, "secs.";
+		end if;
+
+		vprintf pAdicLFunction, 3: "valuation of Phi = %o\n", modsym_dist_valuation(Phi);
+		answer cat:= [scale(alpha^(-1), modsym_dist_normalize(Phi))];
+		count +:= 1;
+
+		accuracy := modsym_dist_valuation(subtract(answer[#answer], answer[#answer-1]));
+
+		if verbose then
+			printf "   Total accuracy is pfr^%o after %o applications of U_p.\n", accuracy, count-1;
+		end if;
+	end while;
+
+	if p_stabilization then
+		Phi := scale(1/(1 - alpha^-1), answer[#answer]);
+	else
+		Phi := answer[#answer];
+	end if;
+
+	return Phi, phi, alpha, scaling_exponent;
+end intrinsic;
+
+

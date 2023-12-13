@@ -1,0 +1,169 @@
+N = 133 (#30) of L-rank 1:
+trying D_K = -31 ... 
+Time: 20.240
+I_K = [ <3, 2> ]
+ShaAnOverK:
+C = 1, cfcpi = 1, Tam = 3, disc Z[f] = 13, disc O = 13, I_{K,pi} = 9
+#Sha(J/K)[2] = 1
+Time: 17.510
+#Sha(J/K)_an = 9 = [ <3, 2> ]
+reducible Galois representations for primes above [].
+#Sha(J^K/Q)[2] = 4
+gcd(I_bounds) = [ <3, 3> ]
+odd prime divisors of Tam(J^K/Q) = [ 3 ]
+The support of Sha(J^K/Q) is contained in S = { 2, 3 }.
+ShaAnRk0:
+LR = 108, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 1, Tam = 3
+#Sha(J^K/Q)_an = 36
+#Sha(J^K/Q)_an[2] = 2^2
+It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:
+* for 1 prime ideals above 2 of degree(s) [ 2 ].
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 1>, <3, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 4.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 1>, <3, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 4.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+
+N = 275 (#55) of L-rank 1:
+trying D_K = -19 ... 
+Time: 28.790
+I_K = [ <3, 1> ]
+ShaAnOverK:
+C = 1, cfcpi = 1, Tam = 1, disc Z[f] = 13, disc O = 13, I_{K,pi} = 3
+#Sha(J/K)[2] = 1
+Time: 15.260
+#Sha(J/K)_an = 9 = [ <3, 2> ]
+reducible Galois representations for primes above [].
+#Sha(J^K/Q)[2] = 4
+gcd(I_bounds) = [ <3, 1> ]
+odd prime divisors of Tam(J^K/Q) = []
+The support of Sha(J^K/Q) is contained in S = { 2, 3 }.
+ShaAnRk0:
+LR = 36, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 1, Tam = 1
+#Sha(J^K/Q)_an = 36
+#Sha(J^K/Q)_an[2] = 2^2
+It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:
+* for 1 prime ideals above 2 of degree(s) [ 2 ].
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 1>, <3, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 1>, <3, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+
+N = 289 (#57) of L-rank 1:
+trying D_K = -15 ... 
+ToAnalyticJacobian: point with large coordinates replaced by point at infinity
+Time: 26.380
+I_K = [ <3, 1> ]
+ToAnalyticJacobian: point with large coordinates replaced by point at infinity
+ShaAnOverK:
+C = 1, cfcpi = 1, Tam = 1, disc Z[f] = 13, disc O = 13, I_{K,pi} = 3
+#Sha(J/K)[2] = 1
+Time: 17.160
+#Sha(J/K)_an = 9 = [ <3, 2> ]
+reducible Galois representations for primes above [].
+#Sha(J^K/Q)[2] = 4
+gcd(I_bounds) = [ <2, 1>, <3, 1> ]
+odd prime divisors of Tam(J^K/Q) = []
+The support of Sha(J^K/Q) is contained in S = { 2, 3 }.
+ShaAnRk0:
+LR = 36, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 1, Tam = 1
+#Sha(J^K/Q)_an = 36
+#Sha(J^K/Q)_an[2] = 2^2
+It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:
+* for 1 prime ideals above 2 of degree(s) [ 2 ].
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 1>, <3, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 1>, <3, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+
+N = 523 (#74) of L-rank 1:
+trying D_K = -35 ... 
+Time: 52.580
+I_K = [ <3, 2> ]
+ShaAnOverK:
+C = 1, cfcpi = 1, Tam = 1, disc Z[f] = 5, disc O = 5, I_{K,pi} = 9
+#Sha(J/K)[2] = 1
+Time: 20.340
+#Sha(J/K)_an = 81 = [ <3, 4> ]
+reducible Galois representations for primes above [].
+#Sha(J^K/Q)[2] = 4
+gcd(I_bounds) = [ <2, 1>, <3, 2> ]
+odd prime divisors of Tam(J^K/Q) = []
+The support of Sha(J^K/Q) is contained in S = { 2, 3 }.
+ShaAnRk0:
+LR = 324, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 1, Tam = 1
+#Sha(J^K/Q)_an = 324
+#Sha(J^K/Q)_an[2] = 2^2
+It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:
+* for 1 prime ideals above 2 of degree(s) [ 2 ].
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <3, 2> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 4.
+  #Sha(J^K/Q)_an predicts an upper bound of 4.
+
+N = 621 (#77) of L-rank 1:
+trying D_K = -11 ... 
+Time: 127.740
+I_K = [ <7, 1> ]
+ShaAnOverK:
+C = 1, cfcpi = 1, Tam = 1, disc Z[f] = 8, disc O = 8, I_{K,pi} = 7
+#Sha(J/K)[2] = 1
+Time: 25.290
+#Sha(J/K)_an = 49 = [ <7, 2> ]
+reducible Galois representations for primes above [].
+#Sha(J^K/Q)[2] = 1
+gcd(I_bounds) = [ <7, 1> ]
+odd prime divisors of Tam(J^K/Q) = []
+The support of Sha(J^K/Q) is contained in S = { 2, 7 }.
+ShaAnRk0:
+LR = 49, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 1, Tam = 1
+#Sha(J^K/Q)_an = 49
+#Sha(J^K/Q)_an[2] = 2^0
+It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <7, 1>, <7, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <7, 1>, <7, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+
+N = 647 (#82) of L-rank 1:
+trying D_K = -11 ... 
+Time: 63.230
+I_K = [ <5, 1> ]
+ShaAnOverK:
+C = 1, cfcpi = 1, Tam = 1, disc Z[f] = 5, disc O = 5, I_{K,pi} = 5
+#Sha(J/K)[2] = 1
+Time: 19.020
+#Sha(J/K)_an = 25 = [ <5, 2> ]
+reducible Galois representations for primes above [].
+#Sha(J^K/Q)[2] = 4
+gcd(I_bounds) = [ <5, 1> ]
+odd prime divisors of Tam(J^K/Q) = []
+The support of Sha(J^K/Q) is contained in S = { 2, 5 }.
+ShaAnRk0:
+LR = 100, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 1, Tam = 1
+#Sha(J^K/Q)_an = 100
+#Sha(J^K/Q)_an[2] = 2^2
+It remains to compute the size of Sha(J^K/Q)[frp^infty] for the remaining frp:
+* for 1 prime ideals above 2 of degree(s) [ 2 ].
+* computing #Sha[frp^infty] for prime ideals above <p, deg(frp)>
+  [ <5, 1> ].
+  [How04] yields an upper bound for the length of Sha(J^K/Q)[frp^infty] of 2.
+  #Sha(J^K/Q)_an predicts an upper bound of 2.
+
+
+Total time: 730.679 seconds, Total memory usage: 531.47MB

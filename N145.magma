@@ -1,0 +1,11 @@
+AttachSpec("Sha.spec");
+
+SetLogFile("logs/145.log");
+
+load "verifyBSD.magma";
+
+N := 145;
+R<x> := PolynomialRing(Rationals());
+C := HyperellipticCurve(20*x^5 - 19*x^4 + 118*x^3 - 169*x^2 + 50*x + 25);
+
+flag := verifyBSD(C, N);
