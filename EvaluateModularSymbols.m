@@ -88,10 +88,29 @@ intrinsic CanonicalPeriods(f::ModFrmElt : prec := 20) -> SeqEnum
   Zf := Integers(Qf);
 
   // compute Omega_{A_f/Q}
-  cfcpi := ManinConstant(f`curve, f);
-  // if p ne 2, then coker_pi_R / ker_pi_R is a p-adic unit
-  corr_period := cfcpi;
-  printf "dividing Omega_J by c_f * c_pi = %o.\n", corr_period;
+  N := Level(S);
+  bpmseq, alphaseq, Mseq := DiagramData(C, N);
+  // bpmseq = [bpmAfdual, bpmAf, bpmJ]
+  // alphaseq = [Id, alpha_pi_Z, alpha_gen, alpha_Z],
+  // Mseq = [imat, M_pi, M_gen, M_round]
+  flag := true;
+  try
+    corr := CompensationFactor(C);
+  catch e
+    printf "ERROR in CompensationFactor: %o\n", e;
+    printf "using corr = 1 instead.\n";
+    corr := 1;
+    flag := false;
+  end try;
+  // compensation factor involves a factor 4 from changing to a minimal model
+  // when given model is not minimal -- correct for this
+  if IspMinimal(C, 2) then corr /:= 4; end if;
+  cfcpi := corr*Abs(Determinant(alphaseq[2]));
+  Mpi := Mseq[2];
+  Mtau := ComplexConjugationOnHomology(bpmseq[3]);
+  _, _, kerpiR, cokerpiR := KerAndCokerOfPiR(Mpi, Mtau); // #ker and #coker of \pi_R^K
+  corr_period := cfcpi * #cokerpiR / #kerpiR;
+  printf "dividing Omega_J by %o.\n", corr_period;
   Omega_J := Omega_J / corr_period;
 
   den := ideal<Zf | 0>;
