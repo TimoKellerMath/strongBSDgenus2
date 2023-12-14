@@ -470,7 +470,7 @@ function recognize_alg_points(pts, J : reps := false)
   //      encoding Mumford representations of complex approximations to a
   //      Galois-stable set of points on J (a genus 2 Jacobian over Q)
   prec := Precision(Universe(pts[1,1]));
-  B := 10^(prec div 2);
+  B := 10^(prec div 3);
   a0pol := get_Qpol([m[1,1] : m in pts], B);
   vprintf JacHypEnd, 2: "EndKernel: a0pol =\n  %o\n", a0pol;
   a1pol := get_Qpol([m[1,2] : m in pts], B);
@@ -507,7 +507,14 @@ function recognize_alg_points(pts, J : reps := false)
           pol := b0b2pol;
           vals := [m[2,1] + m[2,3] : m in pts];
         else
-          error "No squarefree polynomial found";
+          bd := 1;
+          repeat
+            cofs := [Random(-bd, bd) : i in [1..7]];
+            vals := [&+[cofs[i]*m[1,i] : i in [1..3]] + &+[cofs[3+i]*m[2,i] : i in [1..4]] : m in pts];
+            pol := get_Qpol(vals, B);
+            bd +:= 1;
+          until IsSquarefree(pol);
+//           error "No squarefree polynomial found";
         end if;
       end if;
     end if;
@@ -658,9 +665,12 @@ intrinsic EndPreimages(pt::JacHypPt, mat::AlgMatElt : kermap := 0, prec := 50) -
   return all_points;
 end intrinsic;
 
-/* // TODO: Re-write using the functions above
+// TODO: Re-write using the functions above
 intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
-{}
+{ Find the characters occurring in the Galois representation J[pr], where pr is a
+  prime ideal of norm a prime p in the endomorphism ring. }
+  f, h := HyperellipticPolynomials(Curve(J));
+  assert h eq 0;
   htbd := HeightConstant(J : Modified);
   mat := ChangeRing(mat, Integers());
   p := Abs(Determinant(mat));
@@ -671,11 +681,13 @@ intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
   prec := Max(minprec, 2*Ceiling(cofbd/Log(10)) + 50);
   vprintf JacHypEnd, 1: "KernelChars: asking for precision %o\n", prec;
   // First find the projective representation
-  ker, divset, kertodivset, divsettoker := EndKernelDivisors(J, mat : prec := prec);
+  ker, divseq := EndKernelDivisors(J, mat : prec := prec);
   // Check that the kernel is an F_p-vector space.
-  assert p eq Exponent(ker);
+  assert p eq Exponent(Universe(ker));
+  // move to Mumford rep.
+  mumseq := [div_to_mumford(d, f) : d in divseq];
   // Set prec to precision actually used (which may be larger than the precision given).
-  CC := Parent(kertodivset(ker.1)[1,1]);
+  CC := Parent(mumseq[1,1,1]);
   prec := Precision(CC);
   vprintf JacHypEnd, 1: "KernelChars: actual precision is %o\n", prec;
   // Determine generators of the one-dimensional subspaces.
@@ -687,44 +699,38 @@ intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
     return s[i] eq 1;
   end function;
   subgens := [g : g in ker | test(g)];
-  // Look for points at infinity
-  divslarge := {d : d in divset | exists{pt : pt in d | pt[3] eq 0}};
-//   if not IsEmpty(divslarge) then
-//     // Find preimages in the abstract group.
-//     large := {d @ divsettoker : d in divslarge};
-//     largesub := sub<ker | large>;
-//     vprintf JacHypEnd, 1: "\n";
-//     vprintf JacHypEnd, 1: "KernelChars: There are points in the kernel involving a point at infinity.\n";
-//     vprintf JacHypEnd, 1: "             They generate a subgroup with invariants %o\n", Invariants(largesub);
-//     vprintf JacHypEnd, 1: "             Removing 1-dimensional subspaces that meet this subgroup.\n\n";
-//     subgens := [g : g in subgens | g notin largesub];
-//     // Check for rational torsion.
-//     T, mT := TorsionSubgroup(J);
-//     Tp := Kernel(hom<T -> T | [p*t : t in OrderedGenerators(T)]>);
-//     Tpts := [mT(t) : t in Tp | t ne Tp!0];
-//     if #Invariants(largesub) eq 1 and exists{pt : pt in Tpts | Degree(pt[1]) lt pt[3]} then
-//       vprintf JacHypEnd, 1: "               Found rational %o-torsion involving points at infinity.\n\n", p;
-//       // TODO: check more carefully that this is the correct subspace!
-//       triv_chars := [* DirichletGroup(1, GF(p))!1 *];
-//     else
-//       error "problems dealing with points at infinity";
-//     end if;
-//   else
-//     triv_chars := [**];
-//   end if;
-  // Take traces of the finite x-coordinates.
-  traces := [&+[&+[CC| pt[1] : pt in d | pt[3] eq 1] where d := kertodivset(n*g)
-                 : n in [1..Ceiling((p-1)/2)]]
-              : g in subgens];
-  bd := Ceiling(100*Exp(cofbd));
-  polQ := get_Qpol(traces, bd);
-  triv_chars := [* DirichletGroup(1, GF(p))!1 : j in [Degree(polQ)+1..p+1] *];
+  // partition points into one-dimensional subgroups
+  p2 := p div 2;
+  subgroups := [[mumseq[Position(ker, n*g)] : n in [1..p2]] : g in subgens];
+  // find a function on the a-polynomials that separates
+  function check(c0, c1)
+    // consider the trace of c0*a0 + c1*a1 on the subgroups
+    traces := [&+[c0*m[1,1] + c1*m[1,2] : m in mseq] : mseq in subgroups];
+    bd := Ceiling(100*Max([Abs(c0), Abs(c1)])^(p+1)*Exp(cofbd));
+    polQ := get_Qpol(traces, bd);
+    return IsSquarefree(polQ), polQ, traces;
+  end function;
+  c0 := 1; c1 := 0;
+  flag, polQ, traces := check(c0, c1);
+  if not flag then
+    c0 := 0; c1 := 1;
+    flag, polQ, traces := check(c0, c1);
+  end if;
+  bd := 1;
+  while not flag do
+    bd +:= 1;
+    c0 := Random(-bd, bd);
+    c1 := Random(-bd, bd);
+    if c0 ne 0 or c1 ne 0 then
+      flag, polQ, traces := check(c0, c1);
+    end if;
+  end while;
   polQrts := [r[1] : r in Roots(polQ)];
-  if #polQrts + #triv_chars eq 0 then
+  if #polQrts eq 0 then
     vprintf JacHypEnd, 1: "KernelChars: representation is irreducible\n";
-  elif #polQrts + #triv_chars eq 2 then
+  elif #polQrts eq 2 then
     vprintf JacHypEnd, 1: "KernelChars: representation is split\n";
-  elif #polQrts + #triv_chars eq 1 then
+  elif #polQrts eq 1 then
     vprintf JacHypEnd, 1: "KernelChars: representation is reducible, non-semisiple\n";
   else
     error "inconsistent number of rational fixed points on P(kernel)";
@@ -736,28 +742,24 @@ intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
     min, pos := Min([Abs(t - rt) : t in traces]);
     assert min lt 0.1^(prec div 2);
     subgen := subgens[pos];
-    polQa1 := get_Qpol([&+[CC| pt[1] : pt in d | pt[3] ne 0] where d := kertodivset(n*subgen)
-                        : n in [1..Ceiling((p-1)/2)]], bd);
-    polQa0 := get_Qpol([&*[CC| pt[1] : pt in d | pt[3] ne 0] where d := kertodivset(n*subgen)
-                        : n in [1..Ceiling((p-1)/2)]], bd);
-    polQs1 := get_Qpol([&+[CC| pt[2] : pt in d | pt[3] ne 0]^2 where d := kertodivset(n*subgen)
-                        : n in [1..Ceiling((p-1)/2)]], bd);
-    polQs0 := get_Qpol([&+[CC| pt[1]*pt[2] : pt in d | pt[3] ne 0]^2 where d := kertodivset(n*subgen)
-                        : n in [1..Ceiling((p-1)/2)]], bd);
-    K0 := SplittingField(polQa1*polQa0);
-    rts := [r[1] : r in Roots(polQs1, K0)] cat [r[1] : r in Roots(polQs0, K0)];
-    i := 1;
-    while rts[i] eq 0 do i +:= 1; end while;
-    // adjoin a square root
-    K := IsSquare(rts[i]) select K0 else AbsoluteField(ext<K0 | Polynomial([-rts[i], 0, 1])>);
+    ptseq := [mumseq[Position(ker, n*subgen)] : n in [0..p-1]];
+    flag, points := recognize_alg_points(ptseq, J);
+    assert flag;
+    K := BaseField(Universe(points));
     if Degree(K) eq 1 then
-      return [DirichletGroup(1, GF(p))!1];
+      return DirichletGroup(1, GF(p))!1;
       vprintf JacHypEnd, 1: "KernelChars: points defined over Q\n";
     else
-      OK := LLL(max_order([K.1]));
+      OK := LLL(max_order(&cat[Coefficients(pt[1]) cat Coefficients(pt[2]) : pt in points]));
       i := 1;
       while Degree(MinimalPolynomial(OK.i)) ne Degree(K) do i +:= 1; end while;
+      Kold := K;
       K := NumberField(MinimalPolynomial(OK.i));
+      flag, Kold_to_K := IsIsomorphic(Kold, K); assert flag;
+      JK := BaseChange(J, K);
+      points := [elt<JK | Polynomial([K| Kold_to_K(c) : c in Coefficients(pt[1])]),
+                          Polynomial([K| Kold_to_K(c) : c in Coefficients(pt[2])]),
+                          pt[3]> : pt in points];
       assert IsDivisibleBy(p-1, Degree(K)) and IsAbelian(K);
       Kab := AbelianExtension(K);
       cond, cond_inf := Conductor(Kab);
@@ -765,13 +767,13 @@ intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
       cond := Integers()!cond;
       vprintf JacHypEnd, 1: "KernelChars: points defined over field of degree %o and conductor %o\n",
                             Degree(K), cond;
-      JK := BaseChange(J, K);
-      points := &cat[Setseq(Points(JK, Polynomial([a0[1], -a1[1], 1]), 2))
-                      : a0 in Roots(polQa0, K), a1 in Roots(polQa1, K)];
-      points := [pt : pt in points | Order(pt) eq p];
-      assert #points eq p-1;
-      pt1 := points[1]; // a generator
-      logpt := map<Set(points) join {JK!0} -> GF(p) | [<n*pt1, GF(p)!n> : n in [0..p-1]]>;
+      // check that points form a subgroup
+      i := points[1] eq JK!0 select 2 else 1;
+      gen := points[i];
+      posseq := [Position(points, n*gen) : n in [0..p-1]];
+      assert Set(posseq) eq {1..p};
+      // set up logarithm map
+      logpt := map<Set(points) -> GF(p) | [<n*gen, GF(p)!n> : n in [0..p-1]]>;
       // embed into cyclotomic field
       L := NumberField(CyclotomicPolynomial(cond));
       flag, KtoL := IsSubfield(K, L); assert flag;
@@ -782,22 +784,28 @@ intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
       Ugens := [Integers()!mU(u)  : u in OrderedGenerators(U)];
       autsL := [hom<L -> L | L.1^u> : u in Ugens];
       autsK := [hom<K -> K | K.1 @ KtoL @ a @@ KtoL> : a in autsL];
-      // Find action on pt1.
+      // Find action on gen.
       act_on_pt := func<aut, pt | elt<JK | Polynomial([aut(c) : c in Coefficients(pt[1])]),
                                            Polynomial([aut(c) : c in Coefficients(pt[2])]),
                                            pt[3]>>;
-      act := [logpt(act_on_pt(a, pt1)) : a in autsK];
+      act := [logpt(act_on_pt(a, gen)) : a in autsK];
       chars := [ch : ch in Elements(D) | forall{i : i in [1..#Ugens] | ch(Ugens[i]) eq act[i]}];
       assert #chars eq 1;
       return chars[1];
     end if;
   end function;
-  return triv_chars cat [* find_char(r) : r in polQrts *];
-//   return ker, divset, kertodivset, divsettoker, polQ;
+  // shortcut
+  if #polQrts eq 1 and IsDivisibleBy(#TorsionSubgroup(J), p) then
+    return [* DirichletGroup(1, GF(p))!1 *];
+  else
+    return [* find_char(r) : r in polQrts *];
+  end if;
 end intrinsic;
 
 intrinsic Chars(J::JacHyp, p::RngIntElt) -> SeqEnum
-{}
+{ Find the characters corresponding to the one-dimensional subrepresentations of
+  the Galois representations J[pr], where pr is a prime ideal above the non-inert
+  prime p.}
   endgen, OtoE := EndomorphismRingGenus2(J);
   O := Domain(OtoE);
   prs := [e[1] : e in Decomposition(O, p)];
@@ -807,8 +815,13 @@ intrinsic Chars(J::JacHyp, p::RngIntElt) -> SeqEnum
   return [<mat, KernelChars(J, mat)> : mat in mats];
 end intrinsic;
 
-intrinsic ProjIm(J::JacHyp, p::RngIntElt : minprec := 100) -> List
-{}
+
+intrinsic ProjIm(J::JacHyp, p::RngIntElt : minprec := 100) -> GrpPerm
+{ Assuming that p is an inert prime in the real quadratic endomorphism ring of J,
+  determine the image of the Galois group in PGL_2(F_p²) determined by the action
+  on J[p]. }
+  f, h := HyperellipticPolynomials(Curve(J));
+  assert h eq 0;
   htbd := HeightConstant(J : Modified);
   mat := p*IdentityMatrix(Integers(), 2);
   assert IsPrime(p);
@@ -816,16 +829,17 @@ intrinsic ProjIm(J::JacHyp, p::RngIntElt : minprec := 100) -> List
   cofbd := (p^2+1)*(Log(p^2-1) + (p^2-1)/2*htbd);
   // Use sufficient precision.
   prec := Max(minprec, 2*Ceiling(cofbd/Log(10)) + 50);
-  vprintf JacHypEnd, 1: "KernelChars: asking for precision %o\n", prec;
-  // First find the projective representation
-  ker, divset, kertodivset, divsettoker, alpha_map := EndKernelDivisors(J, mat : prec := prec);
+  vprintf JacHypEnd, 1: "ProjIm: asking for precision %o\n", prec;
+  kerseq, divseq, alpha_map := EndKernelDivisors(J, mat : prec := prec);
+  ker := Universe(kerseq);
   // Check that the kernel is an F_p-vector space.
   assert p eq Exponent(ker);
+  // move to Mumford rep.
+  mumseq := [div_to_mumford(d, f) : d in divseq];
   // Set prec to precision actually used (which may be larger than the precision given).
-  CC := Parent(kertodivset(ker.1)[1,1]);
+  CC := Parent(mumseq[1,1,1]);
   prec := Precision(CC);
-  vprintf JacHypEnd, 1: "KernelChars: actual precision is %o\n", prec;
-  // Determine generators of the one-dimensional subspaces.
+  vprintf JacHypEnd, 1: "ProjIm: actual precision is %o\n", prec;
   subgens := [];
   temp := Exclude(Set(ker), ker!0);
   while not IsEmpty(temp) do
@@ -836,25 +850,30 @@ intrinsic ProjIm(J::JacHyp, p::RngIntElt : minprec := 100) -> List
     Append(~subgens, gmults);
   end while;
   assert #subgens eq p^2 + 1; // #P^1(F_{p^2})
-  // Look for points at infinity
-  bd := (Re(CC!10))^(prec/3);
-  assert forall{d : d in divset | #d eq 0 or #d eq 2};
-  divslarge := {d : d in divset | exists{pt : pt in d | Abs(pt[1]) gt bd}};
-  if not IsEmpty(divslarge) then
-    error "points at infinity in divisors!";
-  end if;
-  function get_Qpol(seq, B)
-    // guess the polynomial over Q whose roots are the entries of seq
-    polCC := &*[Polynomial(Universe(seq), [-t, 1]) : t in seq];
-    // Make sure the coefficients are numerically real.
-    assert Max([Abs(Im(c)) : c in Coefficients(polCC)]) lt 0.1^(Precision(Universe(seq))/5);
-    return Polynomial([BestApproximation(Re(c), B) : c in Coefficients(polCC)]);
+  // partition points into one-dimensional subgroups
+  subgroups := [[mumseq[Position(kerseq, g)] : g in s] : s in subgens];
+  // find a function on the a-polynomials that separates
+  function check(c0, c1)
+    // consider the trace of c0*a0 + c1*a1 on the subgroups
+    traces := [&+[c0*m[1,1] + c1*m[1,2] : m in mseq] : mseq in subgroups];
+    bd := Ceiling(100*Max([Abs(c0), Abs(c1)])^(p+1)*Exp(cofbd));
+    polQ := get_Qpol(traces, bd);
+    return IsSquarefree(polQ), polQ, traces;
   end function;
-  // Take traces of the x-coordinates.
-  traces := [&+[&+[pt[1] : pt in d] where d := kertodivset(g) : g in line] : line in subgens];
-  bd := Ceiling(100*Exp(cofbd));
-  polQ := get_Qpol(traces, bd);
-  assert IsSquarefree(polQ);
-  return polQ;
+  c0 := 1; c1 := 0;
+  flag, polQ, traces := check(c0, c1);
+  if not flag then
+    c0 := 0; c1 := 1;
+    flag, polQ, traces := check(c0, c1);
+  end if;
+  bd := 1;
+  while not flag do
+    bd +:= 1;
+    c0 := Random(-bd, bd);
+    c1 := Random(-bd, bd);
+    if c0 ne 0 or c1 ne 0 then
+      flag, polQ, traces := check(c0, c1);
+    end if;
+  end while;
+  return GaloisGroup(polQ), polQ;
 end intrinsic;
-*/
