@@ -665,7 +665,6 @@ intrinsic EndPreimages(pt::JacHypPt, mat::AlgMatElt : kermap := 0, prec := 50) -
   return all_points;
 end intrinsic;
 
-// TODO: Re-write using the functions above
 intrinsic KernelChars(J::JacHyp, mat::AlgMatElt : minprec := 100) -> List
 { Find the characters occurring in the Galois representation J[pr], where pr is a
   prime ideal of norm a prime p in the endomorphism ring. }
