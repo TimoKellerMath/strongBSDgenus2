@@ -5,8 +5,9 @@ This is the Magma code for the algorithms and the examples in "Complete verifica
 __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files should be __load__'ed.
 
 ## External code used
-* Raymond van Bommel's code (slightly modified) for the real period and Tamagawa numbers (see the ancillary files at https://arxiv.org/abs/2002.04667). This is contained in the folders RealPeriod and Tamagawa
+* Raymond van Bommel's code (slightly modified) for the real period and Tamagawa numbers (see the ancillary files at https://arxiv.org/abs/2002.04667):
 * __RealPeriod.m__ (written by Raymond van Bommel): computation of the real period of hyperelliptic Jacobians
+* __Tamagawa_pkg2.m__ (written by Raymond van Bommel): computation of Tamagawa numbers
 
 ## Section 1 (examples)
 * __database_extract.magma:__ produce LaTeX code to print the table with information about the Galois representations
@@ -68,4 +69,3 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 * __Sha.spec:__ spec file to attach the Magma files needed
 * __CrvHypConversion.m:__ convert between curves, modular symbols, and newforms
 * __parse_group.magma:__ functions for creating database_y_K_JK.magma
-* __Tamagawa_pkg2.m__ (written by Raymond van Bommel): computation of Tamagawa numbers
