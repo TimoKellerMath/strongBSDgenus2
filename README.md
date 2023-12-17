@@ -14,6 +14,7 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 * __database.magma:__ data about our genus 2 curves relevant for BSD
 * __findDuplicates.magma:__ count the number of isomorphism (curve) and isogeny (Jacobian) classes of Hasegawa and Wang curves and LMFDB examples
 * __curves.magma:__ genus 2 curves with absolutely simple GL_2-type Jacobian from the LMFDB
+* __LMFDB-curves.magma:__ a variant of __curves.magma__
 
 ## Section 2 (residual Galois representations)
 * __Galreps.m:__ compute the images of the residual Galois representations of weight 2 newforms with real quadratic coefficients
@@ -21,6 +22,10 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 * __computeGalreps.magma:__ print information about the Galois representations
 * __p-adic-Galois.magma:__ code for images of p-adic Galois representations
 * __printGalrepsTable.magma:__ code to produce a LaTeX table with information about the residual Galois representations
+* __characters.magma:__ code for producing the information on the characters involved in odd reducible residual Galois representations
+* __logs/characters.log:__ the result of running __characters.magma__
+* __irreducible_non_maximal.magma:__ code for determining the projective image of the odd irreducible, but not maximal Galois representations
+* __logs/irreducible_non_maximal.log:__ the result of running __irreducible_non_maximal.magma__
 
 ## Section 3 (Heegner point and index)
 * __jacmaps.m:__ compute the Abel--Jacobi map and its inverse also for projective hyperelliptic curves (only needed for older versions of Magma)
@@ -47,17 +52,17 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 ## Section 8 (examples)
 * __verifyBSD.magma:__ compute what is left to do to verify strong BSD
 * __HasegawaWangCurves.magma:__ compute what is left to do to verify strong BSD for the Hasegawa and Wang curves
-* __HasegawaWangCurves.log:__ log file of he previous computation
+* __logs/HasegawaWangCurves.log:__ log file of he previous computation
 * __LMFDBexamples.magma:__ compute what is left to do to verify strong BSD for the LMFDB examples
-* __LMFDBexamples.log:__ log file of the previous computation
-* __remains_to_be_done.txt:__ what remains to be done for the LMFDB examples after running LMFDBexamples.magma
+* __logs/remains_to_be_done.txt:__ what remains to be done for the LMFDB examples after running LMFDBexamples.magma, also includes information on further examples
 
 ## Appendix A (example with #Sha = 7^2)
 * __congruence.magma:__ (written by Sam Frengley) check claims in appendix A
 * __N3200.magma:__ code for I_K and #Sha(J/Q)_an of the N = 3200 example in the Appendix
-* __3200.log:__ log file of the previous computation
+* __logs/3200.log:__ log file of the previous computation
 * __Sha7-curve.magma:__ verify c_2(J/Q) = 1 for Sam Frengley's curve in the Appendix
 * __torsionInSha.magma:__ compute what is left to do to verify strong BSD for twists J^K/Q in the examples with p = 3, 5, 7 dividing #Sha
+* __logs/torsionInSha.log:__ the result of running __torsionInSha.magma__
 
 ## General functions
 * __Sha.spec:__ spec file to attach the Magma files needed
