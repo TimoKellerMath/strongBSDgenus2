@@ -1,0 +1,42 @@
+AttachSpec("Sha.spec");
+
+load "LMFDB-curves.magma";
+
+// The pairs <level, class> with a mod-3 representation that is irreducible,
+// but not maximal.
+pairs :=
+  [<23, 1>, <51, 1>, <67, 1>, <73, 2>, <93, 1>, <103, 1>, <107, 1>, <115, 2>,
+   <123, 2>, <125, 1>, <129, 1>, <133, 3>, <177, 1>, <188, 1>, <191, 1>, <193, 1>,
+   <205, 1>, <207, 2>, <211, 1>, <213, 1>, <221, 1>, <245, 1>, <275, 1>, <375, 1>,
+   <383, 1>, <461, 1>, <499, 1>, <523, 1>, <621, 1>, <621, 3>, <637, 1>, <647, 1>,
+   <677, 1>, <752, 1>, <799, 1>, <845, 1>, <887, 1>, <929, 1>];
+
+// Extract the corresponding list of quadruples <level, class, curve, prime>.
+jacs :=
+  &cat[[<t[1], t[2], Jacobian(SimplifiedModel(HyperellipticCurve(e[2], e[3]))), 3>
+          : e in LMFDB_curves | e[1] eq t[1] and e[5] eq t[2]] : t in pairs];
+
+SetLogFile("logs/irreducible_non_maximal.log");
+
+procedure print_group(G)
+  if #G eq 10 and IsIsomorphic(G, DihedralGroup(5)) then
+    printf "D_5";
+  elif #G eq 12 and IsIsomorphic(G, AlternatingGroup(4)) then
+    printf "A_4";
+  elif #G eq 24 and IsIsomorphic(G, SymmetricGroup(4)) then
+    printf "S_4";
+  elif #G eq 60 and IsIsomorphic(G, AlternatingGroup(5)) then
+    printf "A_5";
+  else
+    printf "could not recognize group:\n%o\n", G;
+  end if;
+end procedure;
+
+for e in jacs do
+  printf "\n====================================================================\n\n";
+  printf "class %o%o, prime = %o:\n\n", e[1], CodeToString(e[2] + char_base), e[4];
+  time G := ProjIm(e[3], e[4]);
+  printf "\n  --> ";
+  print_group(G);
+  printf "\n";
+end for;

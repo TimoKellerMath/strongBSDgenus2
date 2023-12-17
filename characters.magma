@@ -1,0 +1,73 @@
+AttachSpec("Sha.spec");
+
+load "LMFDB-curves.magma";
+
+// The triples <level, class, p> such that
+// p is a prime > 2 and the mod-pr Galois representation associated
+// to the isogeny class of Jacobians no. class at the given level
+// is reducible for at least one (non-inert) prime pr above p.
+triples :=
+  [<23, 1, 11>, <29, 1, 7>, <31, 1, 5>, <39, 1, 7>, <65, 1, 3>,
+   <67, 3, 11>, <73, 1, 3>, <85, 2, 3>, <87, 1, 5>, <123, 2, 7>,
+   <125, 1, 5>, <133, 4, 3>, <133, 5, 5>, <135, 3, 3>, <147, 1, 7>,
+   <211, 1, 5>, <245, 1, 7>, <250, 1, 5>, <275, 1, 5>, <275, 2, 3>,
+   <289, 1, 3>, <289, 1, 17>, <358, 1, 5>, <375, 1, 5>, <841, 1, 29>];
+
+// Extract the corresponding list of quadruples <level, class, curve, prime>.
+jacs :=
+  &cat[[<t[1], t[2], Jacobian(SimplifiedModel(HyperellipticCurve(e[2], e[3]))), t[3]>
+          : e in LMFDB_curves | e[1] eq t[1] and e[5] eq t[2]] : t in triples];
+
+SetLogFile("logs/characters.log");
+
+procedure print_char(ch)
+  n := Modulus(ch);
+  G := Parent(ch);
+  F := BaseRing(G);
+  c := Conductor(ch);
+  if ch eq G!1 then
+    printf "1";
+  elif ch eq G!KroneckerCharacter((-1)^(c mod 4 eq 3 select 1 else 0)*c, F) then
+    printf "ε_%o", (-1)^(c mod 4 eq 3 select 1 else 0)*c;
+  elif #G eq #F - 1 and Ngens(G) eq 1 then
+    m := Eltseq(ch)[1];
+    p := #F;
+    printf "χ_%o", p;
+    if m gt 1 then
+      printf "^%o",m;
+    end if;
+  else
+    printf "%o", ch;
+  end if;
+end procedure;
+
+for e in jacs do
+  printf "\n====================================================================\n\n";
+  printf "class %o%o, prime = %o:\n\n", e[1], CodeToString(e[2] + char_base), e[4];
+  time result := Chars(e[3], e[4]);
+  printf "\n";
+  p := e[4];
+  for pair in result do
+    chars := pair[2];
+    if not IsEmpty(chars) then
+      if #chars eq 1 then
+        ch := chars[1];
+        G := Parent(ch);
+        printf "reducible, non-split: 0 --> ";
+        print_char(ch);
+        printf " --> J[pr] --> ";
+        G1 := DirichletGroup(LCM(p, Modulus(G)), GF(p));
+        print_char(G1!ch^-1 * G1!DirichletGroup(p, GF(p)).1);
+        printf " --> 0\n";
+      else
+        assert #chars eq 2;
+        printf "reducible, split: J[frp] = ";
+        print_char(chars[1]);
+        printf " + ";
+        print_char(chars[2]);
+        printf "\n";
+      end if;
+    end if;
+  end for;
+  printf "\n";
+end for;
