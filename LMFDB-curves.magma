@@ -136,7 +136,9 @@ assert number eq #labels;
 //============================================================================
 
 // Initialize:
-LMFDB_curves := [Parent(<23, x, x, "xxx">)| ];
+LMFDB_curves := [Parent(<23, x, x, "xxx", 1>)| ];
+
+char_base := StringToCode("a") - 1;
 
 // Fill in data from the above.
 for j := 1 to number do
@@ -144,7 +146,8 @@ for j := 1 to number do
   Cdata := data[j];
   lsplit := Split(label, ".");
   cond := StringToInteger(lsplit[1]);
+  cl := StringToCode(lsplit[2]) - char_base;
   flag, level := IsSquare(cond); assert flag;
-  Append(~LMFDB_curves, <level, Cdata[1], Cdata[2], label>);
+  Append(~LMFDB_curves, <level, Cdata[1], Cdata[2], label, cl>);
 end for;
 
