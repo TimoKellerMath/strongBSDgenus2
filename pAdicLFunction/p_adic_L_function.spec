@@ -21,7 +21,6 @@
 	../Tamagawa_pkg2.m
 	../ManinConstant.m
 	../MWgroup.m
-	../endomorphisms_kernel.m
 	../endomorphisms.m
 	../CrvHypConversion.m
 	../jacmaps.m
