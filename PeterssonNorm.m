@@ -222,7 +222,7 @@ intrinsic SymmetricSquareLSeries(f::ModFrmElt : Precision := MyPrec(GetDefaultRe
       // if e <= 1, then C_l = 1
       vlNmin := Valuation(Nmin, l);
       if vlNmin eq 0 then // Lemma 3.5.4 (1)
-        C *:= (l-1)/((l+1)^2 - l*cofs[l]^2)/l^3;
+        C *:= (l-1)*((l+1)^2 - cofs[l]^2)/l^3;
       elif vlNmin eq 1 then // Lemma 3.5.4 (2)
         C *:= 1 - 1/l^2;
       elif vlNmin eq 2 then // Lemma 3.5.4 (3)
