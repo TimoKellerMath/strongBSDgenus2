@@ -338,7 +338,7 @@ end procedure;
 
 // uses DB from database.magma
 //intrinsic print_table_line(entry::.)
-function print_table_line(entry)
+procedure print_table_line(entry)
 //{ entry is an entry in the database. This prints LaTeX code to produce a line
 //  in the table of Galois representations. }
   printf "  %3o&%o & ", entry`N, Split(entry`label, ".")[2];
@@ -348,6 +348,8 @@ function print_table_line(entry)
   else
     printf "%o & ", bad;
   end if;
+  // output discriminant of endomorphism ring
+  printf "$\\sqrt{%o}$ & ", entry`discO_J;
   // for each possibly non-max. rep., give some info
   f := entry`f;
   cofs, prs := get_coeffs(f, 100);
@@ -455,4 +457,4 @@ function print_table_line(entry)
     printf i eq #gi select "" else ";\\quad ";
   end for;
   printf " \\\\\n";
-end function;
+end procedure;

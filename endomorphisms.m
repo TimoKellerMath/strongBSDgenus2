@@ -50,13 +50,19 @@ intrinsic EndomorphismRingGenus2(J::JacHyp : Precision := 300) -> AlgMatElt, Map
   // recognize entries of alphas as elements of quadratic number field
   QuadraticFieldElement := function(x, K)
     minpol := MinimalPolynomial(x, 2); // find minimal polynomial of quadratic irrationality
+    if not IsIrreducible(minpol) then
+      error "Jacobian is not absolutely simple";
+    end if;
     K := CompositeFields(K, NumberField(minpol));
     assert #K eq 1;
     K := K[1];
-    assert Degree(K) le 2;
-    assert Discriminant(K) gt 0; // real quadratic field?
+    if Degree(K) gt 2 or Discriminant(K) lt 0 then // real quadratic field?
+      error "endomorphism ring is not real quadratic";
+    end if;
     roots := Roots(PolynomialRing(K)!minpol);
-    min, pos := Min([Abs(x - Parent(x)!r[1]) : r in roots]);
+    assert #roots eq Degree(minpol);
+    // fix first complex embedding
+    min, pos := Min([Abs(x - Conjugate(r[1], 1 : Precision := MyPrec(x))) : r in roots]);
     return roots[pos][1], K;
   end function;
   //alphasQbar := [Matrix([[QuadraticFieldElement(a[i,j]) : j in [1..2]] : i in [1..2]]) : a in alphas];
@@ -82,6 +88,9 @@ intrinsic EndomorphismRingGenus2(J::JacHyp : Precision := 300) -> AlgMatElt, Map
   //J`Endgen := gen;
   J`AnalyticJacobian := AJ;
 
+  if not IsIrreducible(MinimalPolynomial(gen)) then
+    error "endomorphism ring is split";
+  end if;
 
   OE := EquationOrder(ChangeRing(MinimalPolynomial(gen), Integers()));
   assert OE.1 eq One(OE);

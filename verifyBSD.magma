@@ -52,12 +52,23 @@ procedure print_prime_ideal(pr)
   printf ")";
 end procedure;
 
+
 regular_primes := [p : p in PrimesUpTo(593) // p nmid h_{Q(mu_p)}
                      | p notin [37, 59, 67, 101, 103, 131, 149, 157, 233, 257, 263, 271, 283,
                                 293, 307, 311, 347, 353, 379, 389, 401, 409, 421, 433, 461,
                                 463, 467, 491, 523, 541, 547, 557, 577, 587, 593]];
 
-function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
+procedure print_list(s : no_nl := false)
+  if Type(s) eq SetEnum then s := Setseq(s); end if;
+  for i -> p in s do
+    printf "%o%o", p, i lt #s select ", " else "";
+  end for;
+  if not no_nl then printf "\n"; end if;
+end procedure;
+
+// KY24 = -1: don't use [KY]. KY24 = 0: use [KY] for primes of good reduction; KY24 = 1: use [KY] for primes of good and multiplicative reduction
+function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0, MaxSearchBound := 0, max_prec := 0, KY := 1)
+    g := Genus(C);
     printf "\n====================================================\n\n";
     if index gt 0 then
       printf "index = %o: N := %o\n\n", index, N;
@@ -78,25 +89,40 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
     Crec`C0 := C0;
     J := Jacobian(C);
     Crec`J := J;
-    _, m := EndomorphismRingGenus2(J);
+    try
+      _, m := EndomorphismRingGenus2(J);
+    catch e
+      printf "\nERROR in EndomorphismRingGenus2:\n%o\n\n", e`Object;
+      return false, _;
+    end try;
     discO_J := Discriminant(Domain(m));
     Crec`discO_J := discO_J;
     // determine Tamagwa numbers
+    Tam_poss_incorrect := [Integers()| ];
     if Tamseq cmpeq 0 then
       Tamseq := [Parent(<2,1>)| ];
     end if;
     seen := {e[1] : e in Tamseq};
     for p in [p : p in PrimeDivisors(N) | p notin seen] do
-      Append(~Tamseq, <p, tamagawa_number(C, p)>);
+      cp, flag := tamagawa_number(C, p);
+      if not flag then Append(~Tam_poss_incorrect, p); end if;
+      Append(~Tamseq, <p, cp>);
     end for;
     printf "Tamagawa numbers:";
     for i -> e in Tamseq do
       printf " c_%o = %o%o", e[1], e[2], i lt #Tamseq select "," else "";
     end for;
     printf "\n";
+    if not IsEmpty(Tam_poss_incorrect) then
+      printf " (possibly incorrect for the following p: ";
+      print_list(Tam_poss_incorrect : no_nl);
+      printf ")\n";
+    end if;
     TamJQ := &*[Integers()| e[2] : e in Tamseq];
     Crec`TamJQ := TamJQ;
     printf "Tam(J/Q) = %o\n", Factorization(TamJQ);
+    //C00 := SimplifiedModel(C0);
+    //J := Jacobian(C00);
     printf "DiagramData ...\n";
     time bpmseq, alphaseq, Mseq, ainO, JC, f, isom, Snew, L_is_zero_at_1 := DiagramData(C, N);
     L_rank := L_is_zero_at_1 select 1 else 0;
@@ -136,7 +162,9 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
         Sred := {Parent(ideal<O | 1>)| gi[1] : gi in galreps | "R" in gi[2] and GCD(Norm(gi[1]), fO) eq 1};
         S := Sred;
         reduciblep := [Characteristic(ResidueClassField(frp)) : frp in S];
-        printf "reducible Galois representations for primes above %o.\n", reduciblep;
+        printf "reducible Galois representations for primes above ";
+        print_list(reduciblep : no_nl);
+        printf ".\n";
         reduciblep := Set(reduciblep);
         S join:= SEulerSystem;
         // the prime ideals above 2
@@ -157,6 +185,7 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
         STam := {Parent(ideal<O | 1>)| };
         tors := TorsionSubgroup(J);
         exptors := #tors eq 1 select 1 else Invariants(tors)[#Invariants(tors)];
+        bad_reduciblep := {p : p in reduciblep | Valuation(N, p) le 1} diff {2};
         for e in Tamseq do
           p, cp := Explode(e);
           ap := Coefficient(f, p);
@@ -190,16 +219,22 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
         I_bound_with_hK := 0;
         charid_bound_with_hK := [<ideal<O | 0>, 0>];
         nI_K := 0;
+        irreducible_done := false;
         while nI_K lt 3 do
             D_K := NextHeegnerDiscriminant(N, D_K);
             while IsEven(D_K) or D_K eq -3
-                  // when L_rank = 1, find a Heegner field whose class number is coprime to current bound
+                  /*// when L_rank = 1, find a Heegner field whose class number is coprime to current bound
                   // (up to powers of 2)
                     or (L_rank eq 1 and I_bound_with_hK ne 0
-                          and not IsPowerOf(GCD(ClassNumber(QuadraticField(D_K)), I_bound_with_hK), 2)) do
+                          and not IsPowerOf(GCD(ClassNumber(QuadraticField(D_K)), I_bound_with_hK), 2))*/ do
                 D_K := NextHeegnerDiscriminant(N, D_K);
             end while;
             K := NumberField(Polynomial([-D_K, 0, 1]));
+
+            if irreducible_done and forall{p : p in bad_reduciblep | #Decomposition(K, p) ne 2} then 
+              continue;
+            end if;
+
             if L_rank eq 1 then
                 OK := Integers(K);
                 Zf := CoefficientRing(f);
@@ -213,7 +248,8 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
                 end for;
                 if not IsPowerOf(Abs(Norm(I)), 2) then
                     badPrimes := {frp[1] : frp in Factorization(I)};
-                    printf "bad primes: %o\n", badPrimes;
+                    printf "bad primes: ";
+                    print_list(badPrimes);
                     printf "there are bad primes, trying next D_K.\n";
                     continue;
                 end if;
@@ -229,8 +265,9 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
               continue;
             end if;
 
+            // TODO: check height constant in rank 0 case
             printf "computing Heegner ideal ...\n";
-            time charid, quotient, MWtoJ, MW := CharacteristicIdealOfSubmodule(y_Ks, JC);
+            time charid, quotient, MWtoJ, MW := CharacteristicIdealOfSubmodule(y_Ks, JC : MaxSearchBound := MaxSearchBound, max_prec := max_prec);
             // move to Z[f]
             charid_Zf := [Parent(<ideal<O | 1>, 1>)| ];
             for e in charid do
@@ -252,12 +289,12 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
               end if;
             end for;
             I_K := #quotient;
-            hK := ClassNumber(K);
-            if L_rank eq 1 then
-              printf "I_K = %o, h_K = %o\n", Factorization(I_K), hK;
-            else
+            //hK := ClassNumber(K);
+            //if L_rank eq 1 then
+            //  printf "I_K = %o, h_K = %o\n", Factorization(I_K), hK;
+            //else
               printf "I_K = %o\n", Factorization(I_K);
-            end if;
+            //end if;
             if not IsEmpty(charid_Zf) then
               printf "ideal factorization:";
               for e in charid_Zf do
@@ -272,7 +309,8 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
             Append(~Crec`H_points, y_Ks); // record both points
             Append(~Crec`MWs, Domain(MWtoJ));
             Append(~Crec`MWtoJKs, MWtoJ);
-            I_bound_with_hK := GCD(I_bound_with_hK, L_rank eq 0 select I_K else I_K * hK);
+            // we don't need h_K: I thought the H in [Nekovar] was the Hilbert class field of K, but it is K in our situation
+            /*I_bound_with_hK := GCD(I_bound_with_hK, L_rank eq 0 select I_K else I_K * hK);
             if L_rank eq 1 and hK gt 1 then
               // "multiply" charid_Zf by the class number
               prhK := &cat[[e[1] : e in Decomposition(O, p)] : p in PrimeDivisors(hK)];
@@ -280,7 +318,8 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
               for pr in prhK do
                 if pr notin prset then Append(~charid_Zf, <pr, 1>); end if;
               end for;
-            end if;
+            end if;*/
+            I_bound_with_hK := I_K;
             if charid_bound_with_hK eq [<ideal<O | 0>, 0>] then
               charid_bound_with_hK := charid_Zf;
             else
@@ -299,7 +338,15 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
 
             nI_K +:= 1;
 
-            if charid_bound_support subset S2 join Sred join STam then
+            for p in bad_reduciblep do
+              if #Decomposition(K, p) eq 2 then
+                Exclude(~bad_reduciblep, p);
+              end if;
+            end for;
+
+            irreducible_done := (charid_bound_support subset S2 join Sred join STam);
+            // TODO: the last condition can increase the runtime (the Eisenstein prime p must be split in the Heegner field for the anticyc IMC in [KY24])
+            if irreducible_done /*and (#bad_reduciblep eq 0)*/ then
                 break;
             end if;
         end while;
@@ -318,7 +365,8 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
           printf "\n";
         end if;
         // we don't need to check Tam(J/K) (Lemma 4.5.1) because we include frp | 2 in S
-        printf "prime divisors of Tam(J/Q) = %o\n", PrimeDivisors(TamJQ);
+        printf "prime divisors of Tam(J/Q): ";
+        print_list(PrimeDivisors(TamJQ));
         S join:= SEulerSystem;
         // Sprimes is an upper bound for the support of #Sha(J/Q)
         Sprimes := {Characteristic(ResidueClassField(frp)) : frp in S};
@@ -332,7 +380,8 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
           diff_primes := {Integers()| };
         else
           diff_primes := Set(PrimeDivisors(sha_an)) diff Sprimes;
-          printf "#Sha_an may have prime divisors not dividing #Sha: %o\n", diff_primes;
+          printf "#Sha_an may have prime divisors not dividing #Sha: ";
+          print_list(diff_primes);
         end if;
         Sred := Sred diff S2;
         SEulerSystem := SEulerSystem diff S2;
@@ -355,6 +404,44 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
           JQtors := #TorsionSubgroup(J);
           Stors := poss_tors(f, PrimesUpTo(200), get_coeffs(f, 200));
           Stors := {frp : frp in Stors | IsDivisibleBy(JQtors, Characteristic(ResidueClassField(frp)))};
+          for frp in Sred do
+            p := Characteristic(ResidueClassField(frp));
+            // TODO: when BSD_p from [KY24] is extended to p || N, add this here
+            if (p gt 2) and (#Decomposition(O, p) eq 1) and (Valuation(N, p) le KY)  then
+              printf "  BSD_p holds for the (unique) Eisenstein prime above %o by [KY24, Thm. C].\n", p;
+              Exclude(~S, frp); // no more work to be done at frp
+              Exclude(~Sred1, frp);
+              Exclude(~Stors, frp);
+              continue;
+            end if;
+            // argument of introduction of [KY24]: p = frp*frp' with one irreducible and one reducible
+            if (p gt 2) and (g eq 2) and (Valuation(N, p) le KY) and (Degree(frp) eq 1) 
+                and (#{frp : frp in Sred | Characteristic(ResidueClassField(frp)) eq p} eq 1) then 
+              primes_above_p := {frpp[1] : frpp in Decomposition(O, p)};
+              for i -> K in Crec`H_fields do
+                if #Decomposition(K, p) ne 2 then // [KY24] needs p split in K
+                  continue;
+                end if;
+                function factorization_to_ideal(fact)
+                  return &*[Parent(ideal<O | 1>)| e[1]^e[2] : e in fact];
+                end function;
+                I_K := factorization_to_ideal(Crec`I_bounds[i][2]);
+                v_frp_Sha := 2*Valuation(I_K, frp) - 2*Valuation(TamJQ, p); // CHECK: Valuation(TamJQ, frp2) eq 0
+                assert v_frp_Sha ge 0;
+                printf "  v_frp(Sha(J/K)) = %o for the split Eisenstein prime", v_frp_Sha;
+                print_prime_ideal(frp);
+                printf " by the IMC from [KY24, Thm. A/D].\n";
+                if (v_frp_Sha eq 0) and (Valuation(sha_an, p) eq 0) and
+                   (#primes_above_p eq 1) or ((#primes_above_p eq 2) and (Valuation(I_K, Setseq(primes_above_p diff {frp})[1]) eq 0)) then
+                  Exclude(~S, frp); // no more work to be done at frp
+                  Exclude(~Sred1, frp);
+                  Exclude(~Stors, frp);
+                  break;
+                end if;
+              end for;
+              continue;
+            end if;
+          end for;
           for frp in Stors do
               p := Characteristic(ResidueClassField(frp));
               if (p eq 2) or (Degree(frp) gt 1) then
@@ -385,15 +472,20 @@ function verifyBSD(C, N : index := 0, Cf := 0, Tamseq := 0)
           Sred := Sred1;
         end if;
 
-        if not IsEmpty(S) or not IsEmpty(diff_primes) then
+        if not IsEmpty(S) or not IsEmpty(diff_primes) or not IsEmpty(Tam_poss_incorrect) then
             printf "\nThe following remains to be done:\n";
+            if not IsEmpty(Tam_poss_incorrect) then
+              printf "* Check the computation of the Tamagawa numbers at the following primes: ";
+              print_list(Tam_poss_incorrect);
+            end if;
             if not IsEmpty(diff_primes) then
-              printf "* Check the computation of #Sha_an at the following primes: %o\n", diff_primes;
+              printf "* Check the computation of #Sha_an at the following primes: ";
+              print_list(diff_primes);
             end if;
             if not IsEmpty(S2) then
                 printf "* Show that #Sha(J/Q)[2^infty] = %o.\n", 2^Valuation(sha_an, 2);
                 if Valuation(sha_an, 2) le 3 then
-                    printf "  If this curve is from the LMFDB, this follows from Fisher-Yan.\n";
+                    printf "  If this curve is from the LMFDB, this follows from [Fisher-Yan].\n";
                 end if;
             end if;
             rem_p := {Integers()| };

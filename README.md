@@ -55,6 +55,7 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 * __HasegawaWangCurves.magma:__ compute what is left to do to verify strong BSD for the Hasegawa and Wang curves
 * __logs/HasegawaWangCurves.log:__ log file of he previous computation
 * __LMFDBexamples.magma:__ compute what is left to do to verify strong BSD for the LMFDB examples
+* __logs/LMFDBexamples.log:__ log file of he previous computation
 * __logs/remains_to_be_done.txt:__ what remains to be done for the LMFDB examples after running LMFDBexamples.magma, also includes information on further examples
 
 ## Appendix A (example with #Sha = 7^2)

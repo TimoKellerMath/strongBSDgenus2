@@ -52,6 +52,8 @@ Wang_curves_with_labels := [
 <188, P![1, -2, 1, 1, -1, 1], P![], "188.2.a.a">
 ];
 
+//SetVerbose("HeegnerPoint", 4);
+
 for i -> NC in Hasegawa_curves_with_labels cat Wang_curves_with_labels do
     N := NC[1];
     C := SimplifiedModel(HyperellipticCurve(NC[2], NC[3]));

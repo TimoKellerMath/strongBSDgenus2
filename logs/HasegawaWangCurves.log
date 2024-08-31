@@ -10,33 +10,30 @@ N = 23
 Tamagawa numbers: c_23 = 11
 Tam(J/Q) = [ <11, 1> ]
 DiagramData ...
-Time: 0.430
-reducible Galois representations for primes above [ 11 ].
+Time: 0.260
+reducible Galois representations for primes above 11.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -7 ...
-Time: 0.120
+Time: 0.090
 checking height with Gross-Zagier ...
-Time: 2.040
+Time: 1.160
 difference in height(y_K) vs. Gross-Zagier: 0.000000
 computing Heegner ideal ...
-Time: 1.930
+Time: 1.060
 I_K = [ <11, 1> ]
 ideal factorization: ([ 11, 0 ], [ 8, 1 ])
 gcd(I_bounds) = [ <11, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 11, 0 ], [ 8, 1 ])
-prime divisors of Tam(J/Q) = [ 11 ]
+prime divisors of Tam(J/Q): 11
 The support of Sha(J/Q) is contained in S = { 11 }.
 ShaAnRk0:
 LR = 1/11, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 11, Tam = 11
 The analytic order of Sha(J/Q)_an is 1 = [].
 The support of #Sha(J/Q)_an is contained in the primes below primes in S.
-possible torsion prime  ([ 11, 0 ], [ 7, 1 ]):
-  dim Sha(J/Q)[frp] <= 2 for frp = <11, 1> by 6.2.1
+  v_frp(Sha(J/K)) = 0 for the split Eisenstein prime ([ 11, 0 ], [ -3, 1 ]) by the IMC from [KY24, Thm. A/D].
 
 The following remains to be done:
-* Show that Sha(J/Q)[frp] = 0 for the reducible prime
-  frp = ([ 11, 0 ], [ -3, 1 ]) above 11.
 * Show that Sha(J/Q)[frp] = 0 for the irreducible prime
   frp = ([ 11, 0 ], [ 4, 1 ]) above 11.
 
@@ -50,22 +47,22 @@ N = 29
 Tamagawa numbers: c_29 = 7
 Tam(J/Q) = [ <7, 1> ]
 DiagramData ...
-Time: 0.240
-reducible Galois representations for primes above [ 7 ].
+Time: 0.150
+reducible Galois representations for primes above 7.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -7 ...
-Time: 0.130
+Time: 0.080
 checking height with Gross-Zagier ...
-Time: 2.420
+Time: 1.270
 difference in height(y_K) vs. Gross-Zagier: 0.000000
 computing Heegner ideal ...
-Time: 2.120
+Time: 1.110
 I_K = [ <7, 1> ]
 ideal factorization: ([ 7, 0 ], [ 3, -1 ])
 gcd(I_bounds) = [ <7, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 7, 0 ], [ 3, -1 ])
-prime divisors of Tam(J/Q) = [ 7 ]
+prime divisors of Tam(J/Q): 7
 The support of Sha(J/Q) is contained in S = { 7 }.
 ShaAnRk0:
 LR = 1/7, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 7, Tam = 7
@@ -94,25 +91,25 @@ N = 39
 Tamagawa numbers: c_3 = 28, c_13 = 1
 Tam(J/Q) = [ <2, 2>, <7, 1> ]
 DiagramData ...
-Time: 1.380
-reducible Galois representations for primes above [ 7, 2 ].
+Time: 1.000
+reducible Galois representations for primes above 7, 2.
 #Sha(J/Q)[2] = 1
 c_3 = 28: a_3 = 1
   q = 7: #prqs = 2, v_7(exp(tors)) = 1, #(Sred meet prqs) = 1
   --> can remove one prime ideal above 7 from Tamagawa support
 trying Heegner points for D_K = -23 ...
-Time: 0.300
+Time: 0.160
 checking height with Gross-Zagier ...
-Time: 5.990
+Time: 3.090
 difference in height(y_K) vs. Gross-Zagier: 1.57772E-30
 computing Heegner ideal ...
-Time: 7.000
+Time: 3.350
 I_K = [ <2, 2>, <7, 1> ]
 ideal factorization: ([ 2, 0 ], [ -1, -1 ])^2 ([ 7, 0 ], [ 3, -1 ])
 gcd(I_bounds) = [ <2, 2>, <7, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 7, 0 ], [ 3, -1 ]),  ([ 2, 0 ], [ -1, -1 ])
-prime divisors of Tam(J/Q) = [ 2, 7 ]
+prime divisors of Tam(J/Q): 2, 7
 The support of Sha(J/Q) is contained in S = { 7 }.
 ShaAnRk0:
 LR = 1/28, C = 1, cfcpi = 1, #ker = 2, #coker = 2, #tors = 28, Tam = 28
@@ -137,22 +134,22 @@ N = 85
 Tamagawa numbers: c_5 = 4, c_17 = 2
 Tam(J/Q) = [ <2, 3> ]
 DiagramData ...
-Time: 0.600
-reducible Galois representations for primes above [ 2 ].
+Time: 0.320
+reducible Galois representations for primes above 2.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -19 ...
-Time: 0.120
+Time: 0.060
 checking height with Gross-Zagier ...
-Time: 6.610
+Time: 3.350
 difference in height(y_K) vs. Gross-Zagier: 3.94430E-31
 computing Heegner ideal ...
-Time: 5.960
-I_K = [ <2, 3> ], h_K = 1
+Time: 3.070
+I_K = [ <2, 3> ]
 ideal factorization: ([ 2, 0 ], [ 1, 1 ])^3
 gcd(I_bounds) = [ <2, 3> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 2, 0 ], [ 1, 1 ])
-prime divisors of Tam(J/Q) = [ 2 ]
+prime divisors of Tam(J/Q): 2
 The support of Sha(J/Q) is contained in S = {}.
 ShaAnRk1:
 LR = 16, C = 1, cfcpi = 1, #ker = 2, #coker = 1, #J(R)[2] = 4, Tam = 8
@@ -188,22 +185,22 @@ N = 161
 Tamagawa numbers: c_7 = 4, c_23 = 1
 Tam(J/Q) = [ <2, 2> ]
 DiagramData ...
-Time: 2.450
-reducible Galois representations for primes above [].
+Time: 1.230
+reducible Galois representations for primes above .
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -19 ...
-Time: 0.370
+Time: 0.210
 checking height with Gross-Zagier ...
-Time: 13.980
+Time: 6.880
 difference in height(y_K) vs. Gross-Zagier: 3.94430E-31
 computing Heegner ideal ...
-Time: 2.560
-I_K = [ <2, 2> ], h_K = 1
+Time: 1.320
+I_K = [ <2, 2> ]
 ideal factorization: ([ 2, 0 ])
 gcd(I_bounds) = [ <2, 2> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 2, 0 ])
-prime divisors of Tam(J/Q) = [ 2 ]
+prime divisors of Tam(J/Q): 2
 The support of Sha(J/Q) is contained in S = {}.
 ShaAnRk1:
 LR = 16, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #J(R)[2] = 4, Tam = 4
@@ -223,35 +220,26 @@ N = 165
 Tamagawa numbers: c_3 = 4, c_5 = 2, c_11 = 2
 Tam(J/Q) = [ <2, 4> ]
 DiagramData ...
-Time: 2.150
-reducible Galois representations for primes above [ 2 ].
+Time: 1.080
+reducible Galois representations for primes above 2.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -131 ...
-Time: 8.430
+Time: 3.960
 checking height with Gross-Zagier ...
-Time: 192.250
+Time: 94.450
 difference in height(y_K) vs. Gross-Zagier: 0.000000
 computing Heegner ideal ...
-Time: 11.600
-I_K = [ <2, 5> ], h_K = 5
+Time: 6.240
+I_K = [ <2, 5> ]
 ideal factorization: ([ 2, 0 ], [ 1, 1 ])^5
-trying Heegner points for D_K = -299 ...
-Time: 8.090
-checking height with Gross-Zagier ...
-Time: 844.630
-difference in height(y_K) vs. Gross-Zagier: 7.88861E-31
-computing Heegner ideal ...
-Time: 7.810
-I_K = [ <2, 4> ], h_K = 8
-ideal factorization: ([ 2, 0 ], [ 1, 1 ])^4
 gcd(I_bounds) = [ <2, 5> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 2, 0 ], [ 1, 1 ])
-prime divisors of Tam(J/Q) = [ 2 ]
+prime divisors of Tam(J/Q): 2
 The support of Sha(J/Q) is contained in S = {}.
 ShaAnRk1:
-LR = 32, C = 1, cfcpi = 1, #ker = 2, #coker = 2, #J(R)[2] = 8, Tam = 16
-sqrt(disc Z[f] / disc O) = 1, I_{K,pi} = 16, (J(K):J(Q)) = 1
+LR = 128, C = 1, cfcpi = 1, #ker = 2, #coker = 2, #J(R)[2] = 8, Tam = 16
+sqrt(disc Z[f] / disc O) = 1, I_{K,pi} = 32, (J(K):J(Q)) = 1
 The analytic order of Sha(J/Q)_an is 1 = [].
 The support of #Sha(J/Q)_an is contained in the primes below primes in S.
 
@@ -287,40 +275,40 @@ N = 65
 Tamagawa numbers: c_5 = 7, c_13 = 1
 Tam(J/Q) = [ <7, 1> ]
 DiagramData ...
-Time: 0.660
-reducible Galois representations for primes above [ 7, 2 ].
+Time: 0.440
+reducible Galois representations for primes above 7, 2.
 #Sha(J/Q)[2] = 2
 c_5 = 7: a_5 = 1
   q = 7: #prqs = 2, v_7(exp(tors)) = 1, #(Sred meet prqs) = 1
   --> can remove one prime ideal above 7 from Tamagawa support
 trying Heegner points for D_K = -51 ...
-Time: 0.450
+Time: 0.330
 checking height with Gross-Zagier ...
-Time: 17.380
+Time: 10.290
 difference in height(y_K) vs. Gross-Zagier: 6.31089E-30
 computing Heegner ideal ...
-Time: 5.420
+Time: 2.750
 I_K = [ <2, 1>, <7, 1> ]
 ideal factorization: ([ 2, 0 ], [ -1, -1 ]) ([ 7, 0 ], [ 3, -1 ])
 gcd(I_bounds) = [ <2, 1>, <7, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 7, 0 ], [ 3, -1 ]),  ([ 2, 0 ], [ -1, -1 ])
-prime divisors of Tam(J/Q) = [ 7 ]
+prime divisors of Tam(J/Q): 7
 The support of Sha(J/Q) is contained in S = { 2, 7 }.
-WARNING: Extending the base field to Number Field with defining polynomial x^2 -
-    4*x + 5 over the Rational Field
+WARNING: Extending the base field to Number Field with defining polynomial x^2 +
+    2*x + 2 over the Rational Field
 Regular model could not be constructed at p = 3 for Hyperelliptic Curve defined 
 by y^2 + (-x^3 - 1)*y = -4*x^6 + 9*x^4 + 7*x^3 + 18*x^2 - 10 over Rational Field
 Compensation factor (and hence the real period) could be off by a power of 3
 ShaAnRk0:
 LR = 1/14, C = 1, cfcpi = 1/9, #ker = 1, #coker = 1, #tors = 14, Tam = 7
 The analytic order of Sha(J/Q)_an is 18 = [ <2, 1>, <3, 2> ].
-#Sha_an may have prime divisors not dividing #Sha: { 3 }
+#Sha_an may have prime divisors not dividing #Sha: 3
 possible torsion prime  ([ 7, 0 ], [ 3, 1 ]):
   dim Sha(J/Q)[frp] = 0 for frp = <7, 1> by 6.2.1
 
 The following remains to be done:
-* Check the computation of #Sha_an at the following primes: { 3 }
+* Check the computation of #Sha_an at the following primes: 3
 
 
 65.2.a.c:
@@ -332,25 +320,25 @@ N = 65
 Tamagawa numbers: c_5 = 1, c_13 = 3
 Tam(J/Q) = [ <3, 1> ]
 DiagramData ...
-Time: 7.970
-reducible Galois representations for primes above [ 3, 2 ].
+Time: 4.610
+reducible Galois representations for primes above 3, 2.
 #Sha(J/Q)[2] = 2
 trying Heegner points for D_K = -51 ...
-Time: 0.550
+Time: 0.320
 checking height with Gross-Zagier ...
-Time: 17.640
+Time: 8.700
 difference in height(y_K) vs. Gross-Zagier: 0.000000
 computing Heegner ideal ...
-Time: 5.140
+Time: 2.530
 I_K = [ <2, 1>, <3, 1> ]
 ideal factorization: ([ 2, 0 ], [ 1, -1 ]) ([ 3, 0 ], [ 0, -1 ])
 gcd(I_bounds) = [ <2, 1>, <3, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 3, 0 ], [ 0, -1 ]),  ([ 2, 0 ], [ 1, -1 ])
-prime divisors of Tam(J/Q) = [ 3 ]
+prime divisors of Tam(J/Q): 3
 The support of Sha(J/Q) is contained in S = { 2, 3 }.
-WARNING: Extending the base field to Number Field with defining polynomial x^2 +
-    x + 1 over the Rational Field
+WARNING: Extending the base field to Number Field with defining polynomial x^2 -
+    3*x + 3 over the Rational Field
 Regular model could not be constructed at p = 2 for Hyperelliptic Curve defined 
 by y^2 = -x^6 + 10*x^5 - 32*x^4 + 20*x^3 + 40*x^2 + 6*x - 1 over Rational Field
 Compensation factor (and hence the real period) could be off by a power of 2
@@ -359,13 +347,10 @@ LR = 1/6, C = 1/4, cfcpi = 1/4, #ker = 1, #coker = 1, #tors = 6, Tam = 3
 The analytic order of Sha(J/Q)_an is 8 = [ <2, 3> ].
 The support of #Sha(J/Q)_an is contained in the primes below primes in S.
 2-adic valuation 3 of #Sha_an differs from v_2(#Sha[2]) = 1
-possible torsion prime  ([ 3, 0 ], [ 0, 1 ]):
-  dim Sha(J/Q)[frp] <= 2 for frp = <3, 1> by 6.2.1
+  BSD_p holds for the (unique) Eisenstein prime above 3 by [KY24, Thm. C].
 
 The following remains to be done:
-* Check the computation of #Sha_an at the following primes: { 2 }
-* Show that Sha(J/Q)[frp] = 0 for the reducible prime
-  frp = ([ 3, 0 ], [ 0, 1 ]) above 3.
+* Check the computation of #Sha_an at the following primes: 2
 
 
 117.2.a.c:
@@ -377,31 +362,29 @@ N = 117
 Tamagawa numbers: c_3 = 4, c_13 = 1
 Tam(J/Q) = [ <2, 2> ]
 DiagramData ...
-Time: 1.670
-reducible Galois representations for primes above [ 7, 2 ].
+Time: 0.940
+reducible Galois representations for primes above 2.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -23 ...
-Time: 0.800
+Time: 0.460
 checking height with Gross-Zagier ...
-Time: 9.020
+Time: 4.720
 difference in height(y_K) vs. Gross-Zagier: 0.000000
 computing Heegner ideal ...
-Time: 3.730
+Time: 1.820
 I_K = [ <2, 2> ]
 ideal factorization: ([ 2, 0 ], [ -1, 1 ])^2
 gcd(I_bounds) = [ <2, 2> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 2, 0 ], [ -1, 1 ])
-prime divisors of Tam(J/Q) = [ 2 ]
-The support of Sha(J/Q) is contained in S = { 7 }.
+prime divisors of Tam(J/Q): 2
+The support of Sha(J/Q) is contained in S = {}.
 ShaAnRk0:
 LR = 1, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 2, Tam = 4
 The analytic order of Sha(J/Q)_an is 1 = [].
 The support of #Sha(J/Q)_an is contained in the primes below primes in S.
 
-The following remains to be done:
-* Show that Sha(J/Q)[frp] = 0 for the reducible prime
-  frp = ([ 7, 0 ], [ 3, 1 ]) above 7.
+===> BSD is true with #Sha = #Sha_an = 1.
 
 
 125.2.a.b:
@@ -413,22 +396,22 @@ N = 125
 Tamagawa numbers: c_5 = 5
 Tam(J/Q) = [ <5, 1> ]
 DiagramData ...
-Time: 1.620
-reducible Galois representations for primes above [ 5 ].
+Time: 0.930
+reducible Galois representations for primes above 5.
 #Sha(J/Q)[2] = 4
 trying Heegner points for D_K = -11 ...
-Time: 0.740
+Time: 0.390
 checking height with Gross-Zagier ...
-Time: 4.520
+Time: 2.340
 difference in height(y_K) vs. Gross-Zagier: 0.000000
 computing Heegner ideal ...
-Time: 3.780
+Time: 1.780
 I_K = [ <5, 1> ]
 ideal factorization: ([ 5, 0 ], [ 2, 1 ])
 gcd(I_bounds) = [ <5, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 5, 0 ], [ 2, 1 ])
-prime divisors of Tam(J/Q) = [ 5 ]
+prime divisors of Tam(J/Q): 5
 The support of Sha(J/Q) is contained in S = { 2, 5 }.
 ShaAnRk0:
 LR = 4/5, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 5, Tam = 5
@@ -439,7 +422,7 @@ possible torsion prime  ([ 5, 0 ], [ 2, 1 ]):
 
 The following remains to be done:
 * Show that #Sha(J/Q)[2^infty] = 4.
-  If this curve is from the LMFDB, this follows from Fisher-Yan.
+  If this curve is from the LMFDB, this follows from [Fisher-Yan].
 * Show that Sha(J/Q)[frp] = 0 for the reducible prime
   frp = ([ 5, 0 ], [ 2, 1 ]) above 5.
 
@@ -455,22 +438,22 @@ N = 135
 Tamagawa numbers: c_3 = 3, c_5 = 1
 Tam(J/Q) = [ <3, 1> ]
 DiagramData ...
-Time: 2.380
-reducible Galois representations for primes above [ 3 ].
+Time: 1.310
+reducible Galois representations for primes above 3.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -11 ...
-Time: 0.790
+Time: 0.440
 checking height with Gross-Zagier ...
-Time: 5.230
+Time: 2.720
 difference in height(y_K) vs. Gross-Zagier: 1.57772E-30
 computing Heegner ideal ...
-Time: 6.430
+Time: 10.060
 I_K = [ <3, 1> ]
 ideal factorization: ([ 3, 0 ], [ 0, 1 ])
 gcd(I_bounds) = [ <3, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 3, 0 ], [ 0, 1 ])
-prime divisors of Tam(J/Q) = [ 3 ]
+prime divisors of Tam(J/Q): 3
 The support of Sha(J/Q) is contained in S = { 3 }.
 ShaAnRk0:
 LR = 1/3, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 3, Tam = 3
@@ -495,22 +478,22 @@ N = 175
 Tamagawa numbers: c_5 = 1, c_7 = 5
 Tam(J/Q) = [ <5, 1> ]
 DiagramData ...
-Time: 1.840
-reducible Galois representations for primes above [ 5 ].
+Time: 0.990
+reducible Galois representations for primes above 5.
 #Sha(J/Q)[2] = 1
 trying Heegner points for D_K = -19 ...
-Time: 0.150
+Time: 0.090
 checking height with Gross-Zagier ...
-Time: 10.030
+Time: 4.990
 difference in height(y_K) vs. Gross-Zagier: 1.57772E-30
 computing Heegner ideal ...
-Time: 1.660
+Time: 0.860
 I_K = [ <5, 1> ]
 ideal factorization: ([ 5, 0 ], [ 2, 1 ])
 gcd(I_bounds) = [ <5, 1> ]
 prime ideals that occur in the support of all Heegner ideals:
    ([ 5, 0 ], [ 2, 1 ])
-prime divisors of Tam(J/Q) = [ 5 ]
+prime divisors of Tam(J/Q): 5
 The support of Sha(J/Q) is contained in S = { 5 }.
 ShaAnRk0:
 LR = 1/5, C = 1, cfcpi = 1, #ker = 1, #coker = 1, #tors = 5, Tam = 5
@@ -527,4 +510,4 @@ The following remains to be done:
 Curve #36 associated to newform 188.2.a.a is in the LMFDB
 
 
-Total time: 1364.210 seconds, Total memory usage: 213.72MB
+Total time: 284.120 seconds, Total memory usage: 174.62MB

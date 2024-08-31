@@ -1,0 +1,6 @@
+Tamagawa numbers in Magma - by Raymond van Bommel
+
+The package Tamagawa_pkg2.m is supposed to be attached to Magma, using the Attach command.
+The file magma-diff.txt described the changes I made to the regular models package.
+Many cases may work fine without these changes, but when the coordinates of the blow-up are chosen poorly (as in Example 3, unexpected things might happen.
+The intrinsic TamagawaNumber can be called on a regular model to compute the Tamagawa numbers.

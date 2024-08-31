@@ -19,11 +19,11 @@ Append(~DB[1]`JK_invs, [ 11, 0, 0 ]);
 JK := Parent(DB[1]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
--1,
--1,
 1
 ]), Polynomial(K, [
 0,
+0,
+-2,
 1
 ]), 2>,
   elt<JK | Polynomial(K, [
@@ -64,10 +64,11 @@ Append(~DB[2]`JK_invs, [ 7, 0, 0 ]);
 JK := Parent(DB[2]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
+2,
 1,
-0,
 1
 ]), Polynomial(K, [
+0,
 1
 ]), 2>,
   elt<JK | Polynomial(K, [
@@ -198,11 +199,11 @@ Append(~DB[6]`JK_invs, [ 5, 0, 0 ]);
 JK := Parent(DB[6]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
+3,
+-3,
 1
 ]), Polynomial(K, [
-0,
-0,
-1,
+-7,
 1
 ]), 2>,
   elt<JK | Polynomial(K, [
@@ -244,20 +245,19 @@ JK := Parent(DB[7]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 1,
+-1/2,
 1
 ]), Polynomial(K, [
-1,
-0,
-0,
-1
+3/2,
+1/4
 ]), 2>,
   elt<JK | Polynomial(K, [
-1/3030*(-149*w + 4829),
-1/3030*(-169*w - 2291),
+1/330*(31*w - 89),
+1/165*(28*w + 223),
 1
 ]), Polynomial(K, [
-1/2295225*(-106393*w + 943038),
-1/4590450*(640799*w - 221709)
+1/27225*(1678*w - 55602),
+1/54450*(-28529*w - 31089)
 ]), 2>,
   elt<JK | Polynomial(K, [
 14/9,
@@ -289,28 +289,29 @@ Append(~DB[8]`JK_invs, [ 14, 0, 0 ]);
 JK := Parent(DB[8]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
-2,
-1,
-1
-]), Polynomial(K, [
-1,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1/2*(-w - 1),
-1/6*(-w - 7),
-1
-]), Polynomial(K, [
-1/6*(5*w - 1),
-1/18*(11*w + 77)
-]), 2>,
-  elt<JK | Polynomial(K, [
--2,
-1/2*(-w - 1),
+0,
 1
 ]), Polynomial(K, [
 -3,
-1/2*(-w - 5)
+0,
+0,
+-1
+]), 2>,
+  elt<JK | Polynomial(K, [
+1/4*(w + 1),
+1/4*(w + 7),
+1
+]), Polynomial(K, [
+1/2*(-2*w + 1),
+1/8*(-7*w - 33)
+]), 2>,
+  elt<JK | Polynomial(K, [
+1/4*(w + 7),
+1/4*(w + 7),
+1
+]), Polynomial(K, [
+1/8*(w + 19),
+1/8*(3*w - 7)
 ]), 2>]);
 DB[8]`JK_gens := JKgens;
 
@@ -334,13 +335,12 @@ Append(~DB[9]`JK_invs, [ 8, 0, 0 ]);
 JK := Parent(DB[9]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
-0,
+-9/2,
+-1/2,
 1
 ]), Polynomial(K, [
-0,
-0,
-0,
-1
+-9/4,
+1/4
 ]), 2>,
   elt<JK | Polynomial(K, [
 -570025/451271,
@@ -368,8 +368,8 @@ Append(~hps, elt<JK | Polynomial(K, [
 1/68*(-13*w + 85),
 1
 ]), Polynomial(K, [
-1/272*(-17*w - 605),
-1/204*(-17*w - 576)
+1/272*(17*w + 605),
+1/204*(17*w + 576)
 ]), 2>);
 DB[10]`H_points := hps;
 DB[10]`L_rank := 0;
@@ -715,11 +715,11 @@ Append(~DB[18]`JK_invs, [ 5, 0, 0 ]);
 JK := Parent(DB[18]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
+1,
+-1,
 1
 ]), Polynomial(K, [
-0,
-0,
-0,
+-2,
 1
 ]), 2>,
   elt<JK | Polynomial(K, [
@@ -761,11 +761,11 @@ JK := Parent(DB[19]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 1,
--1,
+-4/7,
 1
 ]), Polynomial(K, [
--2,
-1
+1/7,
+10/49
 ]), 2>,
   elt<JK | Polynomial(K, [
 1,
@@ -1149,17 +1149,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 -1,
 -1
 ]), 2>);
-K<w> := NumberField(Polynomial([ 103, 0, 1 ]));
-JK := BaseChange(DB[29]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
--1,
-0,
-0,
-1
-]), 2>);
 DB[29]`H_points := hps;
 DB[29]`L_rank := 1;
 DB[29]`discO_Af := 5;
@@ -1167,26 +1156,6 @@ DB[29]`discO_J := 5;
 JKgens := [* *]; Hps := [* *];
 Append(~DB[29]`JK_invs, [ 0, 0 ]);
 JK := Parent(DB[29]`H_points[1]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-0,
-0,
-1
-]), Polynomial(K, [
--1,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
-1,
-0,
-0,
-1
-]), 2>]);
-Append(~DB[29]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[29]`H_points[2]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 0,
@@ -1218,26 +1187,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 2,
 -21
 ]), 2>);
-K<w> := NumberField(Polynomial([ 103, 0, 1 ]));
-JK := BaseChange(DB[30]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
--349775/1348404,
--31619/337101,
-1
-]), Polynomial(K, [
--242039835961/113637084201,
-3528005062253/454548336804
-]), 2>);
-K<w> := NumberField(Polynomial([ 143, 0, 1 ]));
-JK := BaseChange(DB[30]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-15/8,
--13/4,
-1
-]), Polynomial(K, [
-417/32,
--257/16
-]), 2>);
 DB[30]`H_points := hps;
 DB[30]`L_rank := 1;
 DB[30]`discO_Af := 13;
@@ -1247,13 +1196,12 @@ Append(~DB[30]`JK_invs, [ 9, 0, 0 ]);
 JK := Parent(DB[30]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
-1,
+-5/2,
+2,
 1
 ]), Polynomial(K, [
--6,
-0,
-0,
-1
+-13/2,
+15/2
 ]), 2>,
   elt<JK | Polynomial(K, [
 1
@@ -1271,63 +1219,6 @@ Append(~JKgens, [
 0,
 0,
 1
-]), 2>]);
-Append(~DB[30]`JK_invs, [ 9, 0, 0 ]);
-JK := Parent(DB[30]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-1,
-1
-]), Polynomial(K, [
--6,
-0,
-0,
-1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
--1,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
--5/2,
-1
-]), Polynomial(K, [
-23/2,
-0,
-0,
-1
-]), 2>]);
-Append(~DB[30]`JK_invs, [ 9, 0, 0 ]);
-JK := Parent(DB[30]`H_points[3]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-1,
-1
-]), Polynomial(K, [
--6,
-0,
-0,
-1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1,
--2,
-1
-]), Polynomial(K, [
--8,
-9
-]), 2>,
-  elt<JK | Polynomial(K, [
-41/6,
--17/2,
-1
-]), Polynomial(K, [
-841/12,
--937/12
 ]), 2>]);
 DB[30]`JK_gens := JKgens;
 
@@ -1351,12 +1242,12 @@ Append(~DB[31]`JK_invs, [ 5, 0, 0 ]);
 JK := Parent(DB[31]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
--1,
--1,
+-2,
+0,
 1
 ]), Polynomial(K, [
--8,
-5
+-3,
+1
 ]), 2>,
   elt<JK | Polynomial(K, [
 -29/7,
@@ -1477,17 +1368,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 -3,
 2
 ]), 2>);
-K<w> := NumberField(Polynomial([ 59, 0, 1 ]));
-JK := BaseChange(DB[34]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
--1,
-1
-]), Polynomial(K, [
-1,
-0,
-0,
-1
-]), 2>);
 DB[34]`H_points := hps;
 DB[34]`L_rank := 1;
 DB[34]`discO_Af := 8;
@@ -1495,31 +1375,6 @@ DB[34]`discO_J := 8;
 JKgens := [* *]; Hps := [* *];
 Append(~DB[34]`JK_invs, [ 2, 0, 0 ]);
 JK := Parent(DB[34]`H_points[1]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-1,
--1,
-1
-]), Polynomial(K, []), 2>,
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
-3,
-0,
-0,
-1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-0,
--1
-]), 2>]);
-Append(~DB[34]`JK_invs, [ 2, 0, 0 ]);
-JK := Parent(DB[34]`H_points[2]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 1,
@@ -1556,16 +1411,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 7,
 -1
 ]), 2>);
-K<w> := NumberField(Polynomial([ 299, 0, 1 ]));
-JK := BaseChange(DB[35]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-0,
-0,
-1
-]), Polynomial(K, [
--3,
--2
-]), 2>);
 DB[35]`H_points := hps;
 DB[35]`L_rank := 1;
 DB[35]`discO_Af := 8;
@@ -1596,32 +1441,6 @@ Append(~JKgens, [
 0,
 0,
 1
-]), 2>]);
-Append(~DB[35]`JK_invs, [ 2, 0, 0 ]);
-JK := Parent(DB[35]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-1,
-1,
-1
-]), Polynomial(K, []), 2>,
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
--3,
-0,
-0,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
-3,
-0,
-0,
--1
 ]), 2>]);
 DB[35]`JK_gens := JKgens;
 
@@ -1668,8 +1487,8 @@ Append(~hps, elt<JK | Polynomial(K, [
 1/529*(-344*w - 142),
 1
 ]), Polynomial(K, [
-1/12167*(-1474*w - 11699),
-1/24334*(-3401*w + 11695)
+1/12167*(1474*w + 11699),
+1/24334*(3401*w - 11695)
 ]), 2>);
 DB[37]`H_points := hps;
 DB[37]`L_rank := 0;
@@ -1689,16 +1508,16 @@ Append(~JKgens, [
 1/2*(w + 1),
 1
 ]), Polynomial(K, [
-1/4*(-7*w - 13),
-1/4*(-w + 13)
+1/4*(7*w + 13),
+1/4*(w - 13)
 ]), 2>,
   elt<JK | Polynomial(K, [
 2,
 2,
 1
 ]), Polynomial(K, [
-w,
-2*w
+-w,
+-2*w
 ]), 2>]);
 DB[37]`JK_gens := JKgens;
 
@@ -1865,16 +1684,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 0,
 -1
 ]), 2>);
-K<w> := NumberField(Polynomial([ 39, 0, 1 ]));
-JK := BaseChange(DB[42]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-0,
-0,
-1
-]), Polynomial(K, [
-1,
-3
-]), 2>);
 DB[42]`H_points := hps;
 DB[42]`L_rank := 1;
 DB[42]`discO_Af := 5;
@@ -1882,27 +1691,6 @@ DB[42]`discO_J := 5;
 JKgens := [* *]; Hps := [* *];
 Append(~DB[42]`JK_invs, [ 0, 0 ]);
 JK := Parent(DB[42]`H_points[1]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
-1,
-0,
-0,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
--1,
-0,
-0,
--1
-]), 2>]);
-Append(~DB[42]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[42]`H_points[2]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 0,
@@ -2024,12 +1812,12 @@ Append(~DB[45]`JK_invs, [ 5, 0, 0 ]);
 JK := Parent(DB[45]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
--1,
--1,
+-2,
+0,
 1
 ]), Polynomial(K, [
--1,
-1
+-3,
+2
 ]), 2>,
   elt<JK | Polynomial(K, [
 -5,
@@ -2245,8 +2033,8 @@ Append(~hps, elt<JK | Polynomial(K, [
 11/9,
 1
 ]), Polynomial(K, [
--1/27*w,
-4/27*w
+1/27*w,
+-4/27*w
 ]), 2>);
 DB[51]`H_points := hps;
 DB[51]`L_rank := 0;
@@ -2261,14 +2049,14 @@ Append(~JKgens, [
 11/9,
 1
 ]), Polynomial(K, [
-1/27*w,
--4/27*w
+-1/27*w,
+4/27*w
 ]), 2>,
   elt<JK | Polynomial(K, [
 3/2,
 1
 ]), Polynomial(K, [
-1/4*w
+-1/4*w
 ]), 1>]);
 DB[51]`JK_gens := JKgens;
 
@@ -2283,16 +2071,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 332255975/37859409,
 575747990/37859409
 ]), 2>);
-K<w> := NumberField(Polynomial([ 35, 0, 1 ]));
-JK := BaseChange(DB[52]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-65/21,
-125/21,
-1
-]), Polynomial(K, [
-10838/441,
-18815/441
-]), 2>);
 DB[52]`H_points := hps;
 DB[52]`L_rank := 1;
 DB[52]`discO_Af := 5;
@@ -2300,25 +2078,6 @@ DB[52]`discO_J := 20;
 JKgens := [* *]; Hps := [* *];
 Append(~DB[52]`JK_invs, [ 0, 0 ]);
 JK := Parent(DB[52]`H_points[1]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
--1,
--1,
-1
-]), Polynomial(K, [
-6,
-9
-]), 2>,
-  elt<JK | Polynomial(K, [
--1/3,
-0,
-1
-]), Polynomial(K, [
-5,
-26/3
-]), 2>]);
-Append(~DB[52]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[52]`H_points[2]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 -1,
@@ -2349,16 +2108,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 -7/2,
 -25/4
 ]), 2>);
-K<w> := NumberField(Polynomial([ 35, 0, 1 ]));
-JK := BaseChange(DB[53]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-0,
--1
-]), 2>);
 DB[53]`H_points := hps;
 DB[53]`L_rank := 1;
 DB[53]`discO_Af := 5;
@@ -2366,26 +2115,6 @@ DB[53]`discO_J := 5;
 JKgens := [* *]; Hps := [* *];
 Append(~DB[53]`JK_invs, [ 0, 0 ]);
 JK := Parent(DB[53]`H_points[1]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-0,
-1
-]), Polynomial(K, [
--3,
-0,
-0,
-1
-]), 2>,
-  elt<JK | Polynomial(K, [
-0,
-1/2,
-1
-]), Polynomial(K, [
-3,
-21/4
-]), 2>]);
-Append(~DB[53]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[53]`H_points[2]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
 0,
@@ -2530,16 +2259,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 -1/2,
 5/4
 ]), 2>);
-K<w> := NumberField(Polynomial([ 103, 0, 1 ]));
-JK := BaseChange(DB[56]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-2,
--1
-]), 2>);
 DB[56]`H_points := hps;
 DB[56]`L_rank := 1;
 DB[56]`discO_Af := 5;
@@ -2563,25 +2282,6 @@ Append(~JKgens, [
 0,
 -2,
 1
-]), 2>]);
-Append(~DB[56]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[56]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-1,
--1,
-1
-]), Polynomial(K, [
-0,
-1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-2,
--1
 ]), 2>]);
 DB[56]`JK_gens := JKgens;
 
@@ -2673,16 +2373,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 0,
 1
 ]), 2>);
-K<w> := NumberField(Polynomial([ 47, 0, 1 ]));
-JK := BaseChange(DB[59]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-0,
--1
-]), 2>);
 DB[59]`H_points := hps;
 DB[59]`L_rank := 1;
 DB[59]`discO_Af := 8;
@@ -2707,26 +2397,6 @@ Append(~JKgens, [
 0,
 0,
 1
-]), 2>]);
-Append(~DB[59]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[59]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
--3,
-1,
-1
-]), Polynomial(K, [
--3,
-2
-]), 2>,
-  elt<JK | Polynomial(K, [
--3/2,
-1
-]), Polynomial(K, [
-3,
-0,
-0,
--1
 ]), 2>]);
 DB[59]`JK_gens := JKgens;
 
@@ -2778,16 +2448,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 -9,
 -6
 ]), 2>);
-K<w> := NumberField(Polynomial([ 71, 0, 1 ]));
-JK := BaseChange(DB[61]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
--4,
--1,
-1
-]), Polynomial(K, [
-3,
-2
-]), 2>);
 DB[61]`H_points := hps;
 DB[61]`L_rank := 1;
 DB[61]`discO_Af := 5;
@@ -2811,25 +2471,6 @@ Append(~JKgens, [
 ]), Polynomial(K, [
 -2,
 -1
-]), 2>]);
-Append(~DB[61]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[61]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
--2,
-0,
-1
-]), Polynomial(K, [
--1,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
--1,
-1,
-1
-]), Polynomial(K, [
-2,
-1
 ]), 2>]);
 DB[61]`JK_gens := JKgens;
 
@@ -2881,15 +2522,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 0,
 1
 ]), 2>);
-K<w> := NumberField(Polynomial([ 59, 0, 1 ]));
-JK := BaseChange(DB[63]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-1,
--1,
-1
-]), Polynomial(K, [
-1
-]), 2>);
 DB[63]`H_points := hps;
 DB[63]`L_rank := 1;
 DB[63]`discO_Af := 8;
@@ -2914,26 +2546,6 @@ Append(~JKgens, [
 ]), Polynomial(K, [
 -1,
 4
-]), 2>]);
-Append(~DB[63]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[63]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
--2,
-1
-]), Polynomial(K, [
--6,
-0,
-0,
--1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1,
-1,
-1
-]), Polynomial(K, [
-1,
--4
 ]), 2>]);
 DB[63]`JK_gens := JKgens;
 
@@ -3623,22 +3235,22 @@ Append(~DB[80]`JK_invs, [ 2, 2, 0, 0 ]);
 JK := Parent(DB[80]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
--1,
-2,
-1
-]), Polynomial(K, []), 2>,
-  elt<JK | Polynomial(K, [
 -3/2,
 2,
 1
 ]), Polynomial(K, []), 2>,
   elt<JK | Polynomial(K, [
--5443/666,
--18/37,
+-1,
+2,
+1
+]), Polynomial(K, []), 2>,
+  elt<JK | Polynomial(K, [
+3109/4099,
+14538/4099,
 1
 ]), Polynomial(K, [
-282035/36963*w,
-11918/4107*w
+-3129684/16801801*w,
+4798566/16801801*w
 ]), 2>,
   elt<JK | Polynomial(K, [
 179/386,
@@ -3670,13 +3282,13 @@ Append(~DB[81]`JK_invs, [ 2, 2, 0, 0 ]);
 JK := Parent(DB[81]`H_points[1]); K := BaseField(JK); w := K.1;
 Append(~JKgens, [
   elt<JK | Polynomial(K, [
-1,
--3,
+-3/2,
+-2,
 1
 ]), Polynomial(K, []), 2>,
   elt<JK | Polynomial(K, [
--3/2,
--2,
+1,
+-3,
 1
 ]), Polynomial(K, []), 2>,
   elt<JK | Polynomial(K, [
@@ -3992,16 +3604,6 @@ Append(~hps, elt<JK | Polynomial(K, [
 2,
 -1
 ]), 2>);
-K<w> := NumberField(Polynomial([ 35, 0, 1 ]));
-JK := BaseChange(DB[89]`J, K);
-Append(~hps, elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-0,
--1
-]), 2>);
 DB[89]`H_points := hps;
 DB[89]`L_rank := 1;
 DB[89]`discO_Af := 5;
@@ -4025,25 +3627,6 @@ Append(~JKgens, [
 0,
 0,
 1
-]), 2>]);
-Append(~DB[89]`JK_invs, [ 0, 0 ]);
-JK := Parent(DB[89]`H_points[2]); K := BaseField(JK); w := K.1;
-Append(~JKgens, [
-  elt<JK | Polynomial(K, [
-1,
--1,
-1
-]), Polynomial(K, [
--2,
-1
-]), 2>,
-  elt<JK | Polynomial(K, [
-1
-]), Polynomial(K, [
-0,
-0,
-0,
--1
 ]), 2>]);
 DB[89]`JK_gens := JKgens;
 
