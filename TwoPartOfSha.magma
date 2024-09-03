@@ -1,0 +1,71 @@
+
+// This file requires the files from
+// https://github.com/TomAFisher/Cassels-Tate-pairing--Genus-2 to be in this folder
+
+Attach("g2minimisation.m");
+Attach("genus2ctp.m");
+
+//SetClassGroupBounds("GRH");
+SetDebugOnError(true);
+
+SetVerbose("TwoDescent",0);
+SetVerbose("CasselsTatePairing",0);
+SetVerbose("Minimisation",0);
+SetVerbose("PointSearch",0);
+
+load "LMFDB-curves.magma";
+
+function TwoPartOfSha(C)
+  J := Jacobian(C);
+
+  time S2,S2map := TwoDescentGenus2(J);
+  dimS2 := #Generators(S2);
+  printf "dim Sel_2(J/Q) = %o\n", dimS2;
+  time MW := MordellWeilGroup(J);
+  rank := TorsionFreeRank(MW);
+  printf "r = %o\n", rank;
+  dim2tors := Valuation(#TwoTorsionSubgroup(J), 2);
+  printf "dim J(Q)[2] = %o\n", dim2tors;
+  dimSha2 := dimS2 - rank - dim2tors;
+  printf "=> dim Sha(J/Q)[2] = %o\n", dimSha2;
+
+  time ctp := CasselsTatePairingGenus2(J,S2map);
+  print "The Cassels-Tate pairing on Sel_2(J/Q) is given by";
+  print ctp;
+  printf "and has rank %o.\n", Rank(ctp);
+  if IsInvertible(ctp) then
+    return 2^dimSha2;
+  else 
+    return "Sha(2) could not be determined.";
+  end if;
+end function;
+
+C := HyperellipticCurve(LMFDB_curves[30][2], LMFDB_curves[30][3]);
+D := -31;
+CK := QuadraticTwist(C, D);
+printf "#Sha(J^K/Q)(2) = %o\n\n", TwoPartOfSha(CK);
+
+C := HyperellipticCurve(LMFDB_curves[55][2], LMFDB_curves[55][3]);
+D := -19;
+CK := QuadraticTwist(C, D);
+printf "#Sha(J^K/Q)(2) = %o\n\n", TwoPartOfSha(CK);
+
+C := HyperellipticCurve(LMFDB_curves[57][2], LMFDB_curves[57][3]);
+D := -15;
+CK := QuadraticTwist(C, D);
+printf "#Sha(J^K/Q)(2) = %o\n\n", TwoPartOfSha(CK);
+
+C := HyperellipticCurve(LMFDB_curves[74][2], LMFDB_curves[74][3]);
+D := -35;
+CK := QuadraticTwist(C, D);
+printf "#Sha(J^K/Q)(2) = %o\n\n", TwoPartOfSha(CK);
+
+C := HyperellipticCurve(LMFDB_curves[77][2], LMFDB_curves[77][3]);
+D := -11;
+CK := QuadraticTwist(C, D);
+printf "#Sha(J^K/Q)(2) = %o\n\n", TwoPartOfSha(CK);
+
+C := HyperellipticCurve(LMFDB_curves[82][2], LMFDB_curves[82][3]);
+D := -11;
+CK := QuadraticTwist(C, D);
+printf "#Sha(J^K/Q)(2) = %o\n\n", TwoPartOfSha(CK);

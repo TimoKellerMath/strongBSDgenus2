@@ -65,6 +65,7 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 * __Sha7-curve.magma:__ verify c_2(J/Q) = 1 for Sam Frengley's curve in the Appendix
 * __torsionInSha.magma:__ compute what is left to do to verify strong BSD for twists J^K/Q in the examples with p = 3, 5, 7 dividing #Sha
 * __logs/torsionInSha.log:__ the result of running __torsionInSha.magma__
+* __TwoPartOfSha.magma:__ determine Sha(J/Q)[2^infty] (requires the code of https://github.com/TomAFisher/Cassels-Tate-pairing--Genus-2 to be in this folder)
 
 ## General functions
 * __Sha.spec:__ spec file to attach the Magma files needed
