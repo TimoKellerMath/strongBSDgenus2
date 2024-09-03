@@ -1,11 +1,122 @@
 AttachSpec("Sha.spec");
 
-load ".m";
+load "LMFDB-curves.magma";
+// non-LMFBD, non-Hasegawa Wang curves
+data := [
+<65, P![-10, 0, 18, 7, 9, 0, -4], P![1, 0, 0, 1], "65.2.a.b">, // not isogenous to LMFDB curve
+//<65, P![-1, 6, 40, 20, -32, 10, -1], P![], "65.2.a.c">, // not isomorphic to LMFDB curve
+//<117, P![-7, -9, -12, -5, -3, 0, -1], P![1, 0, 0, 1], "117.2.a.c">, // not isogenous to LMFDB curve
+//<125, P![-4, -3, 6, 12, 12, 5, 1], P![1, 1, 0, 1], "125.2.a.b">, // not isogenous to LMFDB curve
+<133, P![7, 18, 2, -19, -2, 7, -2], P![1, 1, 0, 1], "133.2.a.c">,
+<135, P![-3, -8, 2, -3, 1], P![1, 1, 0, 1], "135.2.a.d">, // not isomorphic to LMFDB curve
+//<175, P![-1, -2, -4, -2, -1, -1], P![1, 0, 1, 1], "175.2.a.e">, // not isogenous to LMFDB curve
+<188, P![1, -2, 1, 1, -1, 1], P![], "188.2.a.a">
+];
+load "Galreps.m";
 
+RF := recformat<index : Integers(),    // the number in the list
+                N : Integers(),        // the level
+                C0 : CrvHyp,           // the reduced minimal Weierstrass model of the curve
+                C : CrvHyp,            // a simplified model
+                J : JacHyp,            // the Jacobian of C
+                label : MonStgElt,     // the LMFDB label
+                class : Integers(),    // the number of the isogeny class (1 = a, 2 = b, ...)
+                f : ModFrmElt,         // one of the newforms attached to J
+                L_rank : Integers(),   // the analytic rank of L(f, s)
+                galreps,               // information on Galois representations with non-max. image
+                non_ss : SeqEnum,      // sequence containing non-semisimple primes
+                isog_deg : Integers(), // degree of the isogeny A_f --> J
+                I_bounds : SeqEnum,    // multiplicative bound on the Heegner indices
+                H_primes : SetEnum,    // primes dividing the Heegner indices (bounds)
+                H_discs : SeqEnum,     // Heegner discriminants used
+                H_fields : SeqEnum,    // the corresponding Heegner fields
+                JQ_invs : SeqEnum,     // invariants of the group J(Q)
+                JK_invs : SeqEnum,     // invariants of the groups J(K) for the Heegner fields
+                JK_gens : List,        // list containing a sequence of generators of J(K) for each K
+                H_points : List,       // the Heegner points in the various J(K)
+                H_points_MW : List,    // the Heegner points as linear combination of the generators
+                MWs : List,            // Mordell--Weil groups
+                MWtoJKs : List,        // maps from Mordell--Weil groups to J(K)
+                polar : SeqEnum,       // the two intersection numbers describing the polarization
+                hseq : SeqEnum,        // the heights of the two components of the Heegner points
+                                       // on A_f, computed via Gross-Zagier
+                M : AlgMatElt,         // matrix quotient of height pairing matrices
+                discO_Af : Integers(), // the discriminant of the coefficient ring of the newform
+                discO_J : Integers(),  // the discriminant of the endomorphism ring of J
+                Sha_an : Integers(),   // the analytic order of Sha
+                TamJQ : Integers(),    // the Tamagawa product over Q
+                TamJKs : SeqEnum,      // the Tamagawa product over Heegner fields K
+                more>;                 // placeholder
+
+//===========================================================================
+
+// Find newform corresponding to a genus 2 curve with RM Jacobian of given level
+function find_f(C, N)
+// { Compute a newform associated to C of level N and the modular symbols space. }
+    // C: genus 2 curve
+    // N: level
+
+    // determine representatives of all Galois orbits of size 2 of newforms at level N
+    nf := [* e[1] : e in Newforms(CuspForms(N)) | #e eq 2 *];
+
+    // for an increasing sequence of primes l not dividing disc(C),
+    // compare the traces of a_l(f) with the relevant coefficient of the zeta function of C
+    disc := Integers()!Discriminant(C);
+    l := 1;
+    repeat
+      repeat l := NextPrime(l); until not IsDivisibleBy(disc, l);
+      Tl := Numerator(ZetaFunction(BaseChange(C, Bang(Rationals(), GF(l)))));
+      trC := -Coefficient(Tl, 1);
+      nf := [* f : f in nf | trC eq Trace(Coefficient(f, l)) *];
+      error if IsEmpty(nf), "no matching newform found";
+    until #nf eq 1;
+    f := nf[1];
+
+    S := NewSubspace(CuspidalSubspace(ModularSymbols(N,2,0)));
+    S := Kernel([<p, MinimalPolynomial(Coefficient(f, p))> : p in PrimesUpTo(l)], S);
+    if Dimension(S) ne 2 * Genus(C) then
+        error "Dimension(S) ne 2 * Genus(C): %o\n", Dimension(S);
+    end if;
+    f`mod_sym := S;
+    return f, S;
+end function;
+
+DB := [rec<RF | index := j> : j in [1..#data]];
+
+// Fill in data from the above.
+char_base := StringToCode("a") - 1;
+for j -> entry in data do
+  label := entry[4];
+  DB[j]`label := label;
+  lsplit := Split(label, ".");
+  level := StringToInteger(lsplit[1]);
+  DB[j]`N := level;
+  DB[j]`non_ss := [p : p in PrimeDivisors(level) | Valuation(level, p) ge 2];
+  assert #lsplit[2] eq 1; // need to adapt when more than 26 isogeny classes are present...
+  DB[j]`class := StringToCode(lsplit[2]) - char_base;
+  C0 := HyperellipticCurve(entry[2], entry[3]);
+  assert Genus(C0) eq 2;
+  DB[j]`C0 := C0;
+  C := SimplifiedModel(C0);
+  DB[j]`C := C;
+  DB[j]`J := Jacobian(C);
+  DB[j]`f := find_f(C0, level);
+  
+  DB[j]`galreps := galrep_info(DB[j]`f, 100);
+
+  _, mEnd := EndomorphismRingGenus2(DB[j]`J);
+  DB[j]`discO_J := Discriminant(Domain(mEnd));
+
+  MW := MordellWeilGroup(DB[j]`J);
+  DB[j]`JQ_invs := ElementaryDivisors(MW);
+
+  print_table_line(DB[j]);
+end for;
+
+/*
 SetLogFile("galreps.log");
 
 SetDebugOnError(true);
-
 
 for i -> Cf in DB do
     printf "N = %o (#%o):\n", Cf`N, i;
@@ -16,4 +127,4 @@ for i -> Cf in DB do
         printf "%o\n", e;
     end try;
     printf "\n";
-end for;
+end for;*/

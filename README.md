@@ -20,7 +20,7 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 ## Section 2 (residual Galois representations)
 * __Galreps.m:__ compute the images of the residual Galois representations of weight 2 newforms with real quadratic coefficients
 * __endomorphisms.m:__ compute endomorphism rings of genus 2 Jacobians and their action on points, in particular torsion points, compute Galois representations rho_frp for fixed frp, characters constituting it if reducible, etc.
-* __computeGalreps.magma:__ print information about the Galois representations
+* __computeGalreps.magma:__ print information about the Galois representations for the Wang examples
 * __p-adic-Galois.magma:__ code for images of p-adic Galois representations
 * __printGalrepsTable.magma:__ code to produce a LaTeX table with information about the residual Galois representations
 * __characters.magma:__ code for producing the information on the characters involved in odd reducible residual Galois representations
