@@ -349,7 +349,7 @@ procedure print_table_line(entry)
     printf "%o & ", bad;
   end if;
   // output discriminant of endomorphism ring
-  printf "$\\sqrt{%o}$ & ", entry`discO_J;
+  printf "$%o$ & ", entry`discO_J;
   // for each possibly non-max. rep., give some info
   f := entry`f;
   cofs, prs := get_coeffs(f, 100);
