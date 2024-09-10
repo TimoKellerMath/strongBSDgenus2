@@ -58,6 +58,8 @@ __.m__ files contain intrinsics and should be __Attach__'ed. __.magma__ files sh
 * __logs/LMFDBexamples.log:__ log file of he previous computation
 * __logs/remains_to_be_done.txt:__ what remains to be done for the LMFDB examples after running LMFDBexamples.magma, also includes information on further examples
 
+* __parallel.sh:__ This bash script will verify strong BSD for many absolutely simple modular abelian varieties of dimension 2 with level N <= 1000. Runs blocks of 100 examples in parallel.
+
 ## Appendix A (example with #Sha = 7^2)
 * __congruence.magma:__ (written by Sam Frengley) check claims in appendix A
 * __N3200.magma:__ code for I_K and #Sha(J/Q)_an of the N = 3200 example in the Appendix
