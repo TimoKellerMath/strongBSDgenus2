@@ -1,0 +1,40 @@
+// from https://github.com/edgarcosta/ModularAbelianSurfaces/blob/master/scripts/verify_curve_QQ.m
+function ReadLine(line)
+    s := Split(line, ":");
+    label := s[1];
+    out := <eval s[i] : i in [2..#s]>;
+    return <label> cat out;
+end function;
+
+load "verifyBSD.magma";
+load "parse_group.magma";
+
+SetVerbose("HeegnerPoint", 1);
+
+SetClassGroupBounds("GRH");
+
+SetLogFile("allCurvesUpToN1000.block" * block * ".log" : Overwrite := false);
+
+block := StringToInteger(block);
+blocksize := 100;
+for i -> line in Split(Read("label_to_curve_QQ.txt")) do
+    if i notin [block * blocksize + 1 .. (block + 1) * blocksize] then
+        continue;
+    end if;
+    label, curve := Explode(Split(line, ":"));
+    N := StringToInteger(Split(label, ".")[1]);
+
+    input := ReadLine(line);
+    QQt<t> := PolynomialRing(Rationals());
+    f, g := Explode([QQt!elt : elt in input[2]]);
+    C := SimplifiedModel(ReducedMinimalWeierstrassModel(HyperellipticCurve(f, g)));
+    printf "%o (#%o):\n", label, i;
+    try
+        //flag, Crec := verifyBSD(C, N : index := i, MaxSearchBound := 2000, max_prec := 1000);
+        flag, Crec := verifyBSD(C, N : index := i);
+    catch e 
+        printf "ERROR (#%o): %o\n", i, e;
+    end try;
+    printf "\n";
+end for;
+//exit;
